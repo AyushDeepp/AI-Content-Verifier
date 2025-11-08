@@ -137,7 +137,7 @@ const ResultCard = ({
           <div className="content-media-display">
             {imagePreview ? (
               <div className="media-image-preview">
-                <img src={imagePreview} alt="Verified image" />
+                <img src={imagePreview} alt="Verification result" />
               </div>
             ) : (
               <div className="media-placeholder">

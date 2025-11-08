@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useState, useEffect, useCallback } from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { resultsAPI } from "../utils/api";
 import ResultCard from "../components/ResultCard";
@@ -21,7 +21,6 @@ import "./Dashboard.css";
 
 const Dashboard = () => {
   const { user, isAuthenticated } = useAuth();
-  const navigate = useNavigate();
   const [stats, setStats] = useState(null);
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -31,18 +30,6 @@ const Dashboard = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const [totalResults, setTotalResults] = useState(0);
   const [expandedResultId, setExpandedResultId] = useState(null);
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      fetchDashboardData();
-    }
-  }, [isAuthenticated]);
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      fetchActivityData();
-    }
-  }, [isAuthenticated, pageLimit, currentPage, filterType, searchQuery]);
 
   const fetchDashboardData = async () => {
     try {
@@ -55,7 +42,7 @@ const Dashboard = () => {
     }
   };
 
-  const fetchActivityData = async () => {
+  const fetchActivityData = useCallback(async () => {
     try {
       // Fetch all results to filter client-side (since API doesn't support server-side filtering)
       const response = await resultsAPI.getAll(1000, 0);
@@ -86,7 +73,19 @@ const Dashboard = () => {
     } catch (error) {
       console.error("Failed to fetch activity data:", error);
     }
-  };
+  }, [filterType, searchQuery, currentPage, pageLimit]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchDashboardData();
+    }
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchActivityData();
+    }
+  }, [isAuthenticated, fetchActivityData]);
 
   const verificationPanels = [
     {
