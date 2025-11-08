@@ -1,0 +1,19 @@
+[data-theme='dark'] {
+  --background: #0D1117;
+  --card: #161B22;
+  --text-primary: #E6EDF3;
+  --text-secondary: #8B949E;
+  --accent: #58A6FF;
+  --accent-gradient: linear-gradient(135deg, #58A6FF, #1F6FEB);
+  --glass-effect: rgba(255, 255, 255, 0.05);
+  --shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+  --border-color: rgba(255, 255, 255, 0.1);
+  --hover-bg: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme='dark'] body {
+  background: var(--background);
+  color: var(--text-primary);
+}
+
+

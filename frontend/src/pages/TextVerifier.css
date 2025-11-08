@@ -1,0 +1,154 @@
+.verifier-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+.verifier-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.verifier-header h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.verifier-header p {
+  font-size: 1rem;
+  color: var(--text-secondary);
+}
+
+.verifier-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.verifier-card {
+  background: var(--card);
+  border-radius: 12px;
+  padding: 1.25rem;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border-color);
+}
+
+.text-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.text-input {
+  width: 100%;
+  padding: 0.875rem;
+  background: var(--glass-effect);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  color: var(--text-primary);
+  font-family: var(--font-family);
+  font-size: 0.95rem;
+  resize: vertical;
+  min-height: 180px;
+  transition: border-color 0.2s ease;
+}
+
+.text-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.1);
+}
+
+.text-count {
+  color: var(--text-secondary);
+  font-size: var(--font-size-small);
+  text-align: right;
+  margin-top: 0.5rem;
+}
+
+.verify-button {
+  padding: 0.875rem 1.75rem;
+  background: var(--accent-gradient);
+  color: white;
+  border: none;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+  align-self: flex-start;
+}
+
+.verify-button:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.verify-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.result-container {
+  animation: fadeIn 0.5s ease-out;
+}
+
+@media (max-width: 768px) {
+  .verifier-header {
+    margin-bottom: 1.5rem;
+  }
+
+  .verifier-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .verifier-header p {
+    font-size: 0.95rem;
+  }
+
+  .verifier-card {
+    padding: 1rem;
+  }
+
+  .text-input {
+    min-height: 150px;
+    padding: 0.75rem;
+    font-size: 0.9rem;
+  }
+
+  .verify-button {
+    padding: 0.75rem 1.5rem;
+    font-size: 0.875rem;
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .verifier-header h1 {
+    font-size: 1.25rem;
+  }
+
+  .verifier-header p {
+    font-size: 0.875rem;
+  }
+
+  .verifier-card {
+    padding: 0.875rem;
+  }
+
+  .text-input {
+    min-height: 120px;
+    font-size: 0.85rem;
+    padding: 0.625rem;
+  }
+
+  .verify-button {
+    padding: 0.625rem 1.25rem;
+    font-size: 0.8rem;
+  }
+}
+
+
+
+

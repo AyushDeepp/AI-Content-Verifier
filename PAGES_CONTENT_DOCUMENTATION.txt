@@ -1,0 +1,796 @@
+================================================================================
+AI CONTENT VERIFIER - PAGES CONTENT DOCUMENTATION
+================================================================================
+
+This document explains the content and functionality of all pages in the
+AI Content Verifier application, including their updated structure and design.
+
+================================================================================
+1. HOME PAGE (Home.jsx)
+================================================================================
+
+Location: frontend/src/pages/Home.jsx
+Route: "/"
+
+CONTENT:
+--------
+The Home page is a comprehensive landing page with multiple sections:
+
+A. Hero Section (Side-by-side layout):
+   - Left side - Hero Content:
+     * Title: "Verify AI Content with Confidence" (with highlighted word)
+     * Subtitle: "Detect AI-generated text, images, and videos using advanced
+       machine learning models. Get instant results with high accuracy."
+     * Two action buttons:
+       - "Get Started Free" button (links to /signup)
+       - "View Dashboard" button (links to /dashboard)
+   
+   - Right side - Hero Illustration:
+     * Large shield icon with glow effect
+     * Decorative illustration container
+
+B. Quick Verify Section:
+   - Section title: "Try it now - Paste text to verify"
+   - Quick text input form:
+     * Textarea for pasting/typing text (4 rows)
+     * Placeholder: "Paste or type text here to verify if it's AI-generated..."
+     * "Verify Text" button with arrow icon
+     * Button disabled when text is empty
+   - Functionality: Stores text in sessionStorage and navigates to /text page
+
+C. How It Works Section:
+   - Section header:
+     * Title: "How It Works"
+     * Subtitle: "Three simple steps to verify your content"
+   
+   - Three step cards with connectors:
+     1. Step 1 - Upload:
+        - Step number: "1"
+        - File icon
+        - Title: "Upload"
+        - Description: "Upload your text, image, or video content to be analyzed"
+     
+     2. Step 2 - Analyze:
+        - Step number: "2"
+        - Robot icon
+        - Title: "Analyze"
+        - Description: "Our AI models analyze patterns and features in your content"
+     
+     3. Step 3 - Result:
+        - Step number: "3"
+        - Check circle icon
+        - Title: "Result"
+        - Description: "Get instant results with confidence scores and detailed insights"
+   
+   - Arrow connectors between steps
+
+D. Verification Preview Section:
+   - Section header:
+     * Title: "Verification Types"
+     * Subtitle: "Choose the verification method that fits your needs"
+   
+   - Three preview cards:
+     1. Text Verification Card:
+        - File icon
+        - Title: "Text Verification"
+        - Description: "Detect AI-generated text by analyzing linguistic patterns,
+          style, and structure. Perfect for articles, essays, and documents."
+        - Demo preview:
+          * Sample text: "The quick brown fox jumps over the lazy dog..."
+          * Demo confidence: "85%"
+        - "Try Text Verification →" link (routes to /text)
+     
+     2. Image Verification Card:
+        - Image icon
+        - Title: "Image Verification"
+        - Description: "Identify AI-generated images using advanced computer vision
+          models. Detect synthetic content in photos and graphics."
+        - Demo preview:
+          * Image placeholder icon
+          * Demo confidence: "92%"
+        - "Try Image Verification →" link (routes to /image)
+     
+     3. Video Verification Card:
+        - Video icon
+        - Title: "Video Verification"
+        - Description: "Analyze videos for AI-generated content. Detect deepfakes
+          and synthetic video materials with frame-by-frame analysis."
+        - Demo preview:
+          * Video placeholder icon
+          * Demo confidence: "78%"
+        - "Try Video Verification →" link (routes to /video)
+
+E. Trust Bar Section:
+   - Thin horizontal bar with three trust indicators:
+     * AI-Powered (Shield icon)
+     * Secure (Lock icon)
+     * Fast (Lightning bolt icon)
+   - Separators between items
+
+F. Why Verify AI Content Section:
+   - Section title: "Why Verify AI Content?"
+   - Three reason cards:
+     1. Content Authenticity Card:
+        - Shield icon
+        - Title: "Content Authenticity"
+        - Description: "Ensure the content you're reading or using is authentic
+          and human-created. Verify sources before trusting them."
+     
+     2. Academic Integrity Card:
+        - Check circle icon
+        - Title: "Academic Integrity"
+        - Description: "Maintain academic standards by verifying student work
+          and research papers for AI-generated content."
+     
+     3. Business Protection Card:
+        - Lock icon
+        - Title: "Business Protection"
+        - Description: "Protect your business from misinformation and verify
+          content before publishing or sharing with stakeholders."
+
+G. CTA Footer Section:
+   - Title: "Ready to Start Verifying?"
+   - Subtitle: "Join thousands of users who trust our AI content verification
+     platform"
+   - Two action buttons:
+     * "Create Free Account" button (links to /signup)
+     * "Explore Dashboard" button (links to /dashboard)
+
+FUNCTIONALITY:
+-------------
+- Comprehensive landing page with multiple sections
+- Quick text verification feature (stores text in sessionStorage)
+- Navigation to signup, dashboard, and verification pages
+- No authentication required
+- Educational content explaining the service
+
+================================================================================
+2. DASHBOARD PAGE (Dashboard.jsx)
+================================================================================
+
+Location: frontend/src/pages/Dashboard.jsx
+Route: "/dashboard"
+
+CONTENT:
+--------
+The Dashboard page is a comprehensive hub with personalized content and activity
+tracking:
+
+A. Personalized Greeting Header:
+   - Personalized greeting: "Welcome back, [User Name] 👋"
+   - Subtitle: "Ready to verify your content? Choose a verification type below."
+
+B. Quick Stats Summary Bar:
+   - Horizontal bar with three key statistics:
+     1. Total Verifications:
+        - Large number display
+        - Label: "Total Verifications"
+     
+     2. AI Detected:
+        - Large number display (styled for AI detection)
+        - Label: "AI Detected"
+     
+     3. Human Detected:
+        - Large number display (styled for human detection)
+        - Label: "Human Detected"
+   
+   - Dividers between stat items
+
+C. Main Dashboard Content (Two-column layout):
+
+   Main Column:
+
+   1. Verification Panels Section:
+      - Section title: "Start Verification"
+      - Three verification panels in grid layout:
+        
+        a. Text Verification Panel:
+           - Panel header:
+             * File icon
+             * Title: "Text Verification"
+             * Description: "Detect AI-generated text content"
+           - Panel footer:
+             * Calendar icon with "Used X times" or "Never used" text
+             * "Start Verification →" button (links to /text)
+        
+        b. Image Verification Panel:
+           - Panel header:
+             * Image icon
+             * Title: "Image Verification"
+             * Description: "Identify AI-generated images"
+           - Panel footer:
+             * Calendar icon with "Used X times" or "Never used" text
+             * "Start Verification →" button (links to /image)
+        
+        c. Video Verification Panel:
+           - Panel header:
+             * Video icon
+             * Title: "Video Verification"
+             * Description: "Analyze videos for AI content"
+           - Panel footer:
+             * Calendar icon with "Used X times" or "Never used" text
+             * "Start Verification →" button (links to /video)
+
+   2. Activity Section:
+      - Activity header:
+        * Title: "Activity"
+        * Activity controls:
+          - Filter controls:
+            * Filter icon
+            * Filter buttons: "All", "Text", "Image", "Video"
+            * Active filter highlighted
+          - Pagination controls:
+            * "Show:" dropdown (10, 20, 50, 100 options)
+      
+      - Search bar:
+        * Search icon
+        * Input field: "Search activities..."
+        * Real-time search filtering
+      
+      - Activity list:
+        * Expandable activity items showing:
+          - Icon (Robot for AI, User for Human) with color coding
+          - Result text (AI Generated / Human Generated)
+          - Metadata: Type (uppercase), Confidence %, Timestamp
+          - Expand arrow indicator
+        * Clicking item expands to show full ResultCard component
+        * Empty state message when no results match filters
+      
+      - Pagination:
+        * Previous/Next buttons
+        * Page indicator: "Page X of Y"
+        * Buttons disabled at first/last page
+
+   Sidebar Column:
+
+   1. Quick Tips Card:
+      - Tips header:
+        * Lightbulb icon
+        * Title: "Quick Tips"
+      - Tips list:
+        * Tip 1: "Text Analysis Tips"
+          - Content: "For best results, provide text samples of at least 100
+            characters."
+        * Tip 2: "Image Verification"
+          - Content: "Upload clear images in common formats (JPG, PNG) for
+            accurate detection."
+        * Tip 3: "Understanding Confidence"
+          - Content: "Confidence scores above 70% indicate strong AI detection
+            signals."
+      - Each tip has info circle icon
+
+   2. Insights Card:
+      - Insights header:
+        * Chart line icon
+        * Title: "Insights"
+      - Insights list:
+        * Text Verifications count
+        * Image Verifications count
+        * Video Verifications count
+        * AI Detection Rate (percentage, highlighted if available)
+
+FUNCTIONALITY:
+-------------
+- Personalized greeting with user's name
+- Displays user statistics from backend API
+- Shows usage history for each verification type
+- Activity feed with search and filtering
+- Client-side filtering by type (all, text, image, video)
+- Real-time search through activities
+- Pagination with configurable page size
+- Expandable activity items showing detailed results
+- Quick tips sidebar for user guidance
+- Insights sidebar with verification statistics
+- Loading state while fetching data
+- Authentication required (checks isAuthenticated)
+
+DATA FETCHED:
+------------
+- User stats (via resultsAPI.getStats())
+- Activity results (via resultsAPI.getAll(1000, 0) for client-side filtering)
+
+================================================================================
+3. LOGIN PAGE (Login.jsx)
+================================================================================
+
+Location: frontend/src/pages/Login.jsx
+Route: "/login"
+
+CONTENT:
+--------
+The Login page handles user authentication with Navbar and Sidebar:
+
+A. Navigation Components:
+   - Navbar component at top
+   - Sidebar component (toggleable via hamburger menu)
+   - Sidebar state management (open/close)
+
+B. Left Side - Illustration Section:
+   - Decorative icon (layered rectangles SVG)
+   - Title: "AI Content Verifier"
+   - Description: "Detect AI-generated content with advanced machine learning"
+
+C. Right Side - Login Form:
+   - Form title: "Welcome Back"
+   - Subtitle: "Sign in to continue"
+   - Error message display (if login fails)
+   
+   Form Fields:
+   1. Email Input:
+      - Label: "Email"
+      - Type: email
+      - Placeholder: "Enter your email"
+      - Required field
+   
+   2. Password Input:
+      - Label: "Password"
+      - Type: password
+      - Placeholder: "Enter your password"
+      - Required field
+   
+   3. Submit Button:
+      - Text: "Sign In" (or "Signing in..." when loading)
+      - Disabled during loading state
+   
+   Footer Link:
+   - "Don't have an account? Sign up" (links to /signup)
+
+FUNCTIONALITY:
+-------------
+- Handles user login authentication
+- Validates email and password fields
+- Shows loading state during authentication
+- Displays error messages for failed login attempts
+- Redirects to /dashboard on successful login
+- Uses AuthContext for authentication state management
+- Includes Navbar and Sidebar for navigation
+- Sidebar toggle functionality
+
+================================================================================
+4. SIGNUP PAGE (Signup.jsx)
+================================================================================
+
+Location: frontend/src/pages/Signup.jsx
+Route: "/signup"
+
+CONTENT:
+--------
+The Signup page handles new user registration with Navbar and Sidebar:
+
+A. Navigation Components:
+   - Navbar component at top
+   - Sidebar component (toggleable via hamburger menu)
+   - Sidebar state management (open/close)
+
+B. Left Side - Illustration Section:
+   - Decorative icon (shield SVG)
+   - Title: "Get Started"
+   - Description: "Join thousands of users verifying content authenticity"
+
+C. Right Side - Registration Form:
+   - Form title: "Create Account"
+   - Subtitle: "Sign up to get started"
+   - Error message display (if registration fails)
+   
+   Form Fields:
+   1. Full Name Input:
+      - Label: "Full Name"
+      - Type: text
+      - Placeholder: "Enter your full name"
+      - Required field
+   
+   2. Email Input:
+      - Label: "Email"
+      - Type: email
+      - Placeholder: "Enter your email"
+      - Required field
+   
+   3. Password Input:
+      - Label: "Password"
+      - Type: password
+      - Placeholder: "Create a password"
+      - Required field
+      - Minimum 6 characters (validated)
+   
+   4. Confirm Password Input:
+      - Label: "Confirm Password"
+      - Type: password
+      - Placeholder: "Confirm your password"
+      - Required field
+      - Must match password (validated)
+   
+   5. Submit Button:
+      - Text: "Sign Up" (or "Creating account..." when loading)
+      - Disabled during loading state
+   
+   Footer Link:
+   - "Already have an account? Sign in" (links to /login)
+
+FUNCTIONALITY:
+-------------
+- Handles new user registration
+- Validates password length (minimum 6 characters)
+- Validates password confirmation match
+- Shows loading state during registration
+- Displays error messages for failed registration
+- Redirects to /dashboard on successful registration
+- Uses AuthContext for authentication state management
+- Includes Navbar and Sidebar for navigation
+- Sidebar toggle functionality
+
+================================================================================
+5. PROFILE PAGE (Profile.jsx)
+================================================================================
+
+Location: frontend/src/pages/Profile.jsx
+Route: "/profile"
+
+CONTENT:
+--------
+The Profile page is now a profile management page (no longer shows statistics):
+
+A. Profile Header:
+   - Large avatar circle with user's first initial
+   - User's full name
+   - User's email address
+
+B. Profile Information Section:
+   - Section header:
+     * Title: "Profile Information"
+     * "Edit Profile" button (with edit icon) - shown when not editing
+   
+   - View Mode (default):
+     * Two detail items:
+       - Full Name:
+         * User icon
+         * Label: "Full Name"
+         * Value: User's full name
+       - Email:
+         * Envelope icon
+         * Label: "Email"
+         * Value: User's email
+   
+   - Edit Mode:
+     * Form with two fields:
+       - Full Name Input:
+         * User icon in label
+         * Label: "Full Name"
+         * Placeholder: "Enter your full name"
+         * Required field
+       - Email Input:
+         * Envelope icon in label
+         * Label: "Email"
+         * Placeholder: "Enter your email"
+         * Required field
+     
+     * Form actions:
+       - "Cancel" button (with times icon)
+       - "Save Changes" button (with save icon, shows "Saving..." when loading)
+
+C. Change Password Section:
+   - Section header:
+     * Title: "Change Password"
+   
+   - Password change form:
+     * Three fields:
+       1. Current Password:
+          - Lock icon in label
+          - Label: "Current Password"
+          - Placeholder: "Enter current password"
+          - Required field
+       
+       2. New Password:
+          - Lock icon in label
+          - Label: "New Password"
+          - Placeholder: "Enter new password"
+          - Required field
+          - Minimum 6 characters
+       
+       3. Confirm New Password:
+          - Lock icon in label
+          - Label: "Confirm New Password"
+          - Placeholder: "Confirm new password"
+          - Required field
+          - Minimum 6 characters
+     
+     * Form action:
+       - "Change Password" button (with lock icon, shows "Changing..." when loading)
+
+D. Message Displays:
+   - Error message display (for failed operations)
+   - Success message display (for successful operations)
+
+FUNCTIONALITY:
+-------------
+- Profile information viewing and editing
+- Toggle between view and edit modes
+- Form validation for profile updates
+- Password change functionality
+- Password validation (minimum 6 characters, must match confirmation)
+- Shows loading states during operations
+- Displays success/error messages
+- Cancel functionality to revert changes
+- Uses AuthContext for user information
+- TODO: API calls for profile update and password change (currently placeholders)
+
+NOTE:
+-----
+This page has been redesigned from a statistics dashboard to a profile
+management page. Statistics are now shown on the Dashboard page instead.
+
+================================================================================
+6. TEXT VERIFIER PAGE (TextVerifier.jsx)
+================================================================================
+
+Location: frontend/src/pages/TextVerifier.jsx
+Route: "/text"
+
+CONTENT:
+--------
+The Text Verifier page allows users to verify text content for AI generation:
+
+A. Page Header:
+   - Title: "Text Verification"
+   - Subtitle: "Paste or type text to check if it's AI-generated"
+
+B. Verification Form:
+   - Text Input Area:
+     * Large textarea for text input
+     * Placeholder: "Enter or paste the text you want to verify..."
+     * 10 rows tall
+     * Character counter showing text length
+     * Required field
+   
+   - Error Message Display:
+     * Shows error messages if verification fails
+     * Special message for 401 errors: "Please login to verify content. Sign up
+       for free to get started!"
+   
+   - Verify Button:
+     * Text: "Verify Text" (or "Verifying..." when loading)
+     * Disabled when text is empty or during loading
+     * Primary button style
+
+C. Loading State:
+   - Loading spinner animation
+   - Message: "Analyzing text with AI models..."
+
+D. Result Display:
+   - ResultCard component showing:
+     * Result (AI or Human)
+     * Confidence percentage
+     * Content type (text)
+     * Timestamp
+     * Content (the verified text)
+
+FUNCTIONALITY:
+-------------
+- Accepts text input from user
+- Checks sessionStorage for quick text from home page
+- Automatically populates textarea if quick text exists
+- Submits text to backend API for AI detection
+- Shows loading state during verification
+- Displays verification results with confidence score
+- Handles errors and displays error messages
+- Special handling for 401 errors (authentication required)
+- Uses detectAPI.text() for verification
+- Clears sessionStorage after loading quick text
+
+================================================================================
+7. IMAGE VERIFIER PAGE (ImageVerifier.jsx)
+================================================================================
+
+Location: frontend/src/pages/ImageVerifier.jsx
+Route: "/image"
+
+CONTENT:
+--------
+The Image Verifier page allows users to verify images for AI generation:
+
+A. Page Header:
+   - Title: "Image Verification"
+   - Subtitle: "Upload an image to check if it's AI-generated"
+
+B. Verification Section:
+   - Upload Card Component:
+     * File upload interface
+     * Accepts image files (accept="image/*")
+     * Drag and drop or click to upload
+   
+   - Image Preview:
+     * Displays preview of uploaded image
+     * Shown after file selection
+     * Uses FileReader API to create data URL
+   
+   - Error Message Display:
+     * Shows error messages if verification fails
+     * Special message for 401 errors: "Please login to verify content. Sign up
+       for free to get started!"
+   
+   - Verify Button:
+     * Text: "Verify Image" (or "Verifying..." when loading)
+     * Only shown after file is uploaded
+     * Disabled during loading
+     * Primary button style
+
+C. Loading State:
+   - Loading spinner animation
+   - Message: "Analyzing image with AI models..."
+
+D. Result Display:
+   - ResultCard component showing:
+     * Result (AI or Human)
+     * Confidence percentage
+     * Content type (image)
+     * Timestamp
+     * Content (from API response)
+     * Image preview (the uploaded image)
+
+FUNCTIONALITY:
+-------------
+- File upload interface for images
+- Generates image preview after upload using FileReader
+- Submits image file to backend API for AI detection
+- Shows loading state during verification
+- Displays verification results with confidence score
+- Handles errors and displays error messages
+- Special handling for 401 errors (authentication required)
+- Uses detectAPI.image() for verification
+- Uses UploadCard component for file handling
+- Passes image preview to ResultCard component
+
+================================================================================
+8. VIDEO VERIFIER PAGE (VideoVerifier.jsx)
+================================================================================
+
+Location: frontend/src/pages/VideoVerifier.jsx
+Route: "/video"
+
+CONTENT:
+--------
+The Video Verifier page allows users to verify videos for AI generation:
+
+A. Page Header:
+   - Title: "Video Verification"
+   - Subtitle: "Upload a video to check if it's AI-generated"
+
+B. Verification Section:
+   - Upload Card Component:
+     * File upload interface
+     * Accepts video files (accept="video/*")
+     * Drag and drop or click to upload
+   
+   - File Info Display:
+     * Shows uploaded file name
+     * Shows file size in MB (formatted to 2 decimal places)
+     * Displayed after file selection
+   
+   - Error Message Display:
+     * Shows error messages if verification fails
+     * Special message for 401 errors: "Please login to verify content. Sign up
+       for free to get started!"
+   
+   - Verify Button:
+     * Text: "Verify Video" (or "Verifying..." when loading)
+     * Only shown after file is uploaded
+     * Disabled during loading
+     * Primary button style
+
+C. Loading State:
+   - Loading spinner animation
+   - Message: "Analyzing video with AI models..."
+
+D. Result Display:
+   - ResultCard component showing:
+     * Result (AI or Human)
+     * Confidence percentage
+     * Content type (video)
+     * Timestamp
+     * Content (from API response)
+
+FUNCTIONALITY:
+-------------
+- File upload interface for videos
+- Displays file information (name and size) after upload
+- Formats file size in MB with 2 decimal places
+- Submits video file to backend API for AI detection
+- Shows loading state during verification
+- Displays verification results with confidence score
+- Handles errors and displays error messages
+- Special handling for 401 errors (authentication required)
+- Uses detectAPI.video() for verification
+- Uses UploadCard component for file handling
+
+================================================================================
+DESIGN & STRUCTURE CHANGES SUMMARY
+================================================================================
+
+MAJOR REDESIGNS:
+
+1. HOME PAGE:
+   - Complete redesign from simple hero to comprehensive multi-section page
+   - Added Quick Verify section with text input
+   - Added "How It Works" section with 3-step process
+   - Added Verification Preview cards with demo content
+   - Added Trust Bar section
+   - Added "Why Verify AI Content" section
+   - Added CTA Footer section
+   - Changed button text from "Get Started" to "Get Started Free"
+   - Changed "Learn More" to "View Dashboard"
+
+2. DASHBOARD PAGE:
+   - Complete redesign from simple tabs to comprehensive dashboard
+   - Added personalized greeting with user name
+   - Added Quick Stats Summary Bar
+   - Changed from tabs to verification panels with usage history
+   - Added Activity section with search and filtering
+   - Added pagination controls
+   - Added expandable activity items
+   - Added sidebar with Quick Tips and Insights cards
+   - Two-column layout (main content + sidebar)
+
+3. PROFILE PAGE:
+   - Complete redesign from statistics dashboard to profile management
+   - Removed statistics grid and recent verifications
+   - Added profile information editing
+   - Added password change functionality
+   - Added view/edit mode toggle
+   - Added form validation and error handling
+
+MINOR UPDATES:
+
+4. LOGIN PAGE:
+   - Added Navbar and Sidebar components
+   - Added sidebar toggle functionality
+
+5. SIGNUP PAGE:
+   - Added Navbar and Sidebar components
+   - Added sidebar toggle functionality
+
+6. TEXT VERIFIER PAGE:
+   - Added sessionStorage check for quick text from home page
+   - Added special error message for 401 errors
+   - Added content prop to ResultCard
+
+7. IMAGE VERIFIER PAGE:
+   - Added special error message for 401 errors
+   - Added content and imagePreview props to ResultCard
+
+8. VIDEO VERIFIER PAGE:
+   - Added special error message for 401 errors
+   - Added content prop to ResultCard
+
+================================================================================
+SUMMARY
+================================================================================
+
+AUTHENTICATION PAGES:
+- Login.jsx: User login with email and password, includes Navbar and Sidebar
+- Signup.jsx: New user registration with full name, email, and password,
+  includes Navbar and Sidebar
+
+NAVIGATION PAGES:
+- Home.jsx: Comprehensive landing page with multiple sections, quick verify
+  feature, educational content, and CTAs
+- Dashboard.jsx: Personalized dashboard with stats, verification panels, activity
+  feed, search/filter, and sidebar tips
+
+VERIFICATION PAGES:
+- TextVerifier.jsx: Verify text content with quick text support from home page
+- ImageVerifier.jsx: Verify images with preview functionality
+- VideoVerifier.jsx: Verify videos with file info display
+
+USER PAGES:
+- Profile.jsx: Profile management page with information editing and password
+  change functionality
+
+COMMON FEATURES:
+- All verification pages show special error messages for 401 (authentication
+  required)
+- All pages use consistent styling and error handling patterns
+- All pages follow responsive design principles
+- Authentication pages include navigation components (Navbar/Sidebar)
+
+================================================================================
+END OF DOCUMENTATION
+================================================================================

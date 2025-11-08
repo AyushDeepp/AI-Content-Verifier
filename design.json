@@ -1,0 +1,90 @@
+{
+    "theme": {
+    "default": "dark",
+    "modes": {
+    "dark": {
+    "background": "#0D1117",
+    "card": "#161B22",
+    "textPrimary": "#E6EDF3",
+    "textSecondary": "#8B949E",
+    "accent": "#58A6FF",
+    "accentGradient": "linear-gradient(135deg, #58A6FF, #1F6FEB)",
+    "glassEffect": "rgba(255,255,255,0.05)",
+    "shadow": "0 4px 30px rgba(0,0,0,0.2)"
+    },
+    "light": {
+    "background": "#F8FAFC",
+    "card": "#FFFFFF",
+    "textPrimary": "#1E293B",
+    "textSecondary": "#475569",
+    "accent": "#3B82F6",
+    "accentGradient": "linear-gradient(135deg, #3B82F6, #1E40AF)",
+    "glassEffect": "rgba(255,255,255,0.7)",
+    "shadow": "0 4px 20px rgba(0,0,0,0.1)"
+    }
+    }
+    },
+    "layout": {
+    "sidebar": {
+    "style": "curved-glass",
+    "width": "80px-collapsed / 250px-expanded",
+    "hoverExpand": true,
+    "position": "left",
+    "icons": "line-icons with animated hover tooltips"
+    },
+    "navbar": {
+    "style": "transparent-glass",
+    "position": "top",
+    "includes": ["logo", "theme-toggle", "profile-menu"]
+    },
+    "cards": {
+    "style": "neumorphic + glass hybrid",
+    "hoverScale": 1.02,
+    "borderRadius": "20px",
+    "transition": "all 0.3s ease-in-out"
+    },
+    "buttons": {
+    "primary": {
+    "shape": "pill",
+    "gradient": "accentGradient",
+    "hoverGlow": true
+    },
+    "secondary": {
+    "shape": "rounded",
+    "bordered": true
+    }
+    },
+    "animations": {
+    "pageTransition": "fade+slide",
+    "onHover": "subtle scale and glow",
+    "uploadProgress": "radial pulse + rotating arc"
+    }
+    },
+    "typography": {
+    "fontFamily": "Inter, Poppins, sans-serif",
+    "fontSizes": {
+    "heading": "2rem",
+    "subheading": "1.25rem",
+    "body": "1rem",
+    "small": "0.875rem"
+    },
+    "letterSpacing": "0.02em"
+    },
+    "components": {
+    "authForms": {
+    "style": "split-screen with gradient overlay",
+    "illustrations": "Lottie animation of shield/AI graphics",
+    "ctaButton": "floating gradient button with glow"
+    },
+    "verifierPanels": {
+    "tabs": "animated sliding tabs",
+    "progressDisplay": "radial score ring + confidence percentage",
+    "resultCard": "glass panel with green/red gradient border based on authenticity"
+    },
+    "profile": {
+    "avatar": "circular with gradient border",
+    "stats": "cards showing number of verifications by type"
+    }
+    }
+    }
+    
