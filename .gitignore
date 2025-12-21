@@ -52,3 +52,4 @@ backend/dist/
 Thumbs.db
 .DS_Store
 
+.env.example
