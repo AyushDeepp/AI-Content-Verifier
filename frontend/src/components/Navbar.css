@@ -4,10 +4,12 @@
   left: 0;
   right: 0;
   z-index: 1000;
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(20px) saturate(180%);
   background: var(--glass-effect);
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 2px solid;
+  border-image: var(--accent-gradient) 1;
   height: 70px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
 
 .navbar-container {
@@ -90,22 +92,26 @@
   color: var(--text-secondary);
   font-weight: 500;
   border-radius: 8px;
-  transition: background 0.2s ease, color 0.2s ease;
+  transition: var(--transition);
 }
 
 .auth-link:hover {
   color: var(--text-primary);
   background: var(--hover-bg);
+  transform: translateY(-1px);
 }
 
 .auth-link.primary {
   background: var(--accent-gradient);
   color: white;
   border-radius: 25px;
+  box-shadow: 0 2px 10px rgba(139, 92, 246, 0.3);
 }
 
 .auth-link.primary:hover {
-  opacity: 0.9;
+  background: var(--accent-gradient-hover);
+  box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
+  transform: translateY(-2px);
 }
 
 .profile-menu {
@@ -124,10 +130,13 @@
   font-weight: 600;
   font-size: 0.875rem;
   cursor: pointer;
+  transition: var(--transition);
+  box-shadow: 0 2px 10px rgba(139, 92, 246, 0.3);
 }
 
 .profile-avatar:hover {
-  opacity: 0.9;
+  transform: scale(1.1);
+  box-shadow: 0 4px 15px rgba(139, 92, 246, 0.5);
 }
 
 .profile-dropdown {
@@ -138,12 +147,13 @@
   border-radius: 12px;
   padding: 0.5rem;
   min-width: 150px;
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow-lg);
   border: 1px solid var(--border-color);
   opacity: 0;
   visibility: hidden;
   transform: translateY(-5px);
-  transition: opacity 0.2s ease, visibility 0.2s ease, transform 0.2s ease;
+  transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
+  backdrop-filter: blur(10px);
 }
 
 .profile-menu:hover .profile-dropdown {
@@ -280,5 +290,3 @@
     font-size: 0.75rem;
   }
 }
-
-

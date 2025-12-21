@@ -1,7 +1,6 @@
 .footer {
   background: var(--card);
   border-top: 1px solid var(--border-color);
-  margin-top: 4rem;
   padding: 3rem 0 1.5rem;
 }
 
@@ -13,9 +12,17 @@
 
 .footer-content {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 2rem;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 3rem;
   margin-bottom: 2rem;
+}
+
+.footer-links-wrapper {
+  /* Takes remaining 3 columns */
+  grid-column: 2 / -1;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
 }
 
 .footer-section {
@@ -30,10 +37,16 @@
   gap: 0.75rem;
 }
 
+.footer-brand-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
 .footer-logo {
   font-size: 2rem;
   color: var(--accent);
-  margin-bottom: 0.5rem;
+  flex-shrink: 0;
 }
 
 .footer-brand-name {
@@ -150,14 +163,38 @@
   margin: 0;
 }
 
+/* Above 1024px: 4 columns in one row (Brand | Quick Links | Verification | Contact) */
+/* Between 768-1024px: Brand on top, then 3 columns below */
+@media (max-width: 1024px) {
+  .footer-content {
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+  }
+
+  .footer-links-wrapper {
+    grid-column: 1;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+  }
+}
+
+/* Below 768px: 1 column (Brand), 2 columns (Quick Links + Verification), 1 column (Contact) */
 @media (max-width: 768px) {
   .footer {
     padding: 2rem 0 1rem;
   }
 
+  .footer-container {
+    padding: 0 1.5rem;
+  }
+
   .footer-content {
-    grid-template-columns: 1fr;
     gap: 2rem;
+  }
+
+  .footer-links-wrapper {
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
   }
 
   .footer-social {
@@ -165,3 +202,116 @@
   }
 }
 
+@media (max-width: 640px) {
+  .footer {
+    padding: 1.5rem 0 1rem;
+  }
+
+  .footer-container {
+    padding: 0 1rem;
+  }
+
+  .footer-content {
+    gap: 1.5rem;
+  }
+
+  .footer-links-wrapper {
+    gap: 1.25rem;
+  }
+
+  .footer-brand-name {
+    font-size: 1.25rem;
+  }
+
+  .footer-brand-description {
+    font-size: 0.875rem;
+  }
+
+  .footer-title {
+    font-size: 1rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .footer-links {
+    gap: 0.5rem;
+  }
+
+  .footer-links li a,
+  .footer-contact li a {
+    font-size: 0.875rem;
+  }
+
+  .footer-contact {
+    gap: 0.5rem;
+  }
+
+  .footer-social {
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+  }
+
+  .footer-social a {
+    width: 32px;
+    height: 32px;
+    font-size: 0.875rem;
+  }
+
+  .footer-bottom {
+    padding-top: 1rem;
+  }
+
+  .footer-copyright {
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .footer {
+    padding: 1rem 0 0.75rem;
+  }
+
+  .footer-container {
+    padding: 0 0.75rem;
+  }
+
+  .footer-content {
+    gap: 1.25rem;
+  }
+
+  .footer-links-wrapper {
+    gap: 1rem;
+  }
+
+  .footer-logo {
+    font-size: 1.5rem;
+  }
+
+  .footer-brand-name {
+    font-size: 1.125rem;
+  }
+
+  .footer-brand-description {
+    font-size: 0.8rem;
+    line-height: 1.5;
+  }
+
+  .footer-title {
+    font-size: 0.95rem;
+  }
+
+  .footer-links li a,
+  .footer-contact li a {
+    font-size: 0.8rem;
+  }
+
+  .footer-social a {
+    width: 28px;
+    height: 28px;
+    font-size: 0.8rem;
+  }
+
+  .footer-copyright {
+    font-size: 0.75rem;
+    line-height: 1.4;
+  }
+}

@@ -93,6 +93,14 @@ const TextVerifier = () => {
               type={result.type}
               timestamp={result.timestamp}
               content={result.content || text}
+              explanation={
+                result.analysis_details && result.analysis_details.length > 0
+                  ? result.analysis_details
+                    .map((detail) => detail.analysis || '')
+                    .filter(text => text.length > 0)
+                    .join('\n\n')
+                  : undefined
+              }
             />
           </div>
         )}

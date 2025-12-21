@@ -7,7 +7,11 @@
   --font-size-small: 0.875rem;
   --letter-spacing: 0.02em;
   --border-radius: 16px;
-  --transition: all 0.2s ease;
+  --border-radius-lg: 20px;
+  --border-radius-xl: 24px;
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-fast: all 0.15s ease;
+  --transition-slow: all 0.5s ease;
 }
 
 * {
@@ -59,7 +63,8 @@ body {
 
 /* Scrollbar Styling */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 10px;
+  height: 10px;
 }
 
 ::-webkit-scrollbar-track {
@@ -67,13 +72,14 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--accent);
-  border-radius: 4px;
+  background: var(--accent-gradient);
+  border-radius: 5px;
+  transition: var(--transition-fast);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--accent);
-  opacity: 0.8;
+  background: var(--accent-gradient-hover);
+  box-shadow: var(--glow-cyan);
 }
 
 /* Utility Classes */
@@ -106,40 +112,118 @@ body {
   cursor: pointer;
   transition: var(--transition);
   font-family: var(--font-family);
+  position: relative;
+  overflow: hidden;
+  transform-style: preserve-3d;
+}
+
+/* Ripple effect on click */
+.btn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.4);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s ease, height 0.6s ease;
+  z-index: 0;
+}
+
+.btn:active::before {
+  width: 300px;
+  height: 300px;
+  transition: width 0s, height 0s;
+}
+
+/* Shine effect on hover */
+.btn::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -100%;
+  width: 50%;
+  height: 200%;
+  background: linear-gradient(90deg,
+      transparent,
+      rgba(255, 255, 255, 0.3),
+      transparent);
+  transform: skewX(-25deg);
+  transition: left 0.6s ease;
+  z-index: 1;
+}
+
+.btn:hover::after {
+  left: 150%;
+}
+
+.btn>* {
+  position: relative;
+  z-index: 2;
 }
 
 .btn-primary {
   background: var(--accent-gradient);
   color: white;
+  box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+  background-size: 200% 200%;
+  background-position: left center;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .btn-primary:hover {
-  opacity: 0.9;
+  background-position: right center;
+  box-shadow: 0 8px 30px rgba(139, 92, 246, 0.5),
+    0 0 20px rgba(139, 92, 246, 0.3);
+  transform: translateY(-3px) scale(1.02);
+}
+
+.btn-primary:active {
+  transform: translateY(-1px) scale(0.98);
+  box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
 }
 
 .btn-secondary {
   background: transparent;
   border: 2px solid var(--accent);
   color: var(--accent);
+  position: relative;
+  z-index: 1;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-secondary::before {
+  z-index: -1;
 }
 
 .btn-secondary:hover {
-  background: var(--accent);
+  background: var(--accent-gradient);
   color: white;
+  border-color: transparent;
+  box-shadow: 0 6px 25px rgba(139, 92, 246, 0.4);
+  transform: translateY(-3px) scale(1.02);
+}
+
+.btn-secondary:active {
+  transform: translateY(-1px) scale(0.98);
 }
 
 /* Card Styles */
 .card {
   background: var(--card);
-  border-radius: 16px;
+  border-radius: var(--border-radius);
   padding: 1.75rem;
   border: 1px solid var(--border-color);
   box-shadow: var(--shadow);
-  transition: box-shadow 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .card:hover {
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-4px);
+  border-color: var(--accent);
 }
 
 /* Loading Spinner */
@@ -187,6 +271,7 @@ body {
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -195,6 +280,58 @@ body {
 
 .fade-in {
   animation: fadeIn 0.5s ease-out;
+}
+
+/* Glow Animation */
+@keyframes glow {
+
+  0%,
+  100% {
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+  }
+
+  50% {
+    box-shadow: 0 0 30px rgba(139, 92, 246, 0.6);
+  }
+}
+
+/* Float Animation */
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* Pulse Animation */
+@keyframes pulse {
+
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+/* Slide In Animation */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 /* Responsive */
@@ -245,5 +382,3 @@ body {
     font-size: 0.875rem;
   }
 }
-
-

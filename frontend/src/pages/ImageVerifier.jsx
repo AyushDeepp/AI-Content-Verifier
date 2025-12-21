@@ -40,7 +40,7 @@ const ImageVerifier = () => {
           "Please login to verify content. Sign up for free to get started!"
         );
       } else {
-      setError(err.response?.data?.detail || "Failed to verify image");
+        setError(err.response?.data?.detail || "Failed to verify image");
       }
     } finally {
       setLoading(false);
@@ -99,6 +99,14 @@ const ImageVerifier = () => {
               timestamp={result.timestamp}
               content={result.content}
               imagePreview={preview}
+              explanation={
+                result.analysis_details && result.analysis_details.length > 0
+                  ? result.analysis_details
+                    .map((detail) => detail.analysis || '')
+                    .filter(text => text.length > 0)
+                    .join('\n\n')
+                  : undefined
+              }
             />
           </div>
         )}

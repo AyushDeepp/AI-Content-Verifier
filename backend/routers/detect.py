@@ -19,7 +19,9 @@ class TextDetectRequest(BaseModel):
     text: str
 
 
-@router.post("/text", response_model=ResultResponse)
+
+
+@router.post("/text")
 async def detect_text(
     request: TextDetectRequest,
     current_user: dict = Depends(get_current_user)
@@ -49,18 +51,25 @@ async def detect_text(
     
     result_id = await results_collection.insert_one(result_doc)
     
-    return ResultResponse(
-        id=str(result_id.inserted_id),
-        user_id=str(current_user["_id"]),
-        type="text",
-        result=detection_result["result"],
-        confidence=detection_result["confidence"],
-        content=request.text[:1000],
-        timestamp=result_doc["timestamp"]
-    )
+    # Build response with analysis details if available
+    response_data = {
+        "id": str(result_id.inserted_id),
+        "user_id": str(current_user["_id"]),
+        "type": "text",
+        "result": detection_result["result"],
+        "confidence": detection_result["confidence"],
+        "content": request.text[:1000],
+        "timestamp": result_doc["timestamp"]
+    }
+    
+    # Add analysis_details if present
+    if "analysis_details" in detection_result:
+        response_data["analysis_details"] = detection_result["analysis_details"]
+    
+    return response_data
 
 
-@router.post("/image", response_model=ResultResponse)
+@router.post("/image")
 async def detect_image(
     file: UploadFile = File(...),
     current_user: dict = Depends(get_current_user)
@@ -101,18 +110,25 @@ async def detect_image(
     
     result_id = await results_collection.insert_one(result_doc)
     
-    return ResultResponse(
-        id=str(result_id.inserted_id),
-        user_id=str(current_user["_id"]),
-        type="image",
-        result=detection_result["result"],
-        confidence=detection_result["confidence"],
-        content=None,
-        timestamp=result_doc["timestamp"]
-    )
+    # Build response with analysis details if available
+    response_data = {
+        "id": str(result_id.inserted_id),
+        "user_id": str(current_user["_id"]),
+        "type": "image",
+        "result": detection_result["result"],
+        "confidence": detection_result["confidence"],
+        "content": None,
+        "timestamp": result_doc["timestamp"]
+    }
+    
+    # Add analysis_details if present
+    if "analysis_details" in detection_result:
+        response_data["analysis_details"] = detection_result["analysis_details"]
+    
+    return response_data
 
 
-@router.post("/video", response_model=ResultResponse)
+@router.post("/video")
 async def detect_video(
     file: UploadFile = File(...),
     current_user: dict = Depends(get_current_user)
@@ -153,13 +169,20 @@ async def detect_video(
     
     result_id = await results_collection.insert_one(result_doc)
     
-    return ResultResponse(
-        id=str(result_id.inserted_id),
-        user_id=str(current_user["_id"]),
-        type="video",
-        result=detection_result["result"],
-        confidence=detection_result["confidence"],
-        content=None,
-        timestamp=result_doc["timestamp"]
-    )
+    # Build response with analysis details if available
+    response_data = {
+        "id": str(result_id.inserted_id),
+        "user_id": str(current_user["_id"]),
+        "type": "video",
+        "result": detection_result["result"],
+        "confidence": detection_result["confidence"],
+        "content": None,
+        "timestamp": result_doc["timestamp"]
+    }
+    
+    # Add analysis_details if present
+    if "analysis_details" in detection_result:
+        response_data["analysis_details"] = detection_result["analysis_details"]
+    
+    return response_data
 

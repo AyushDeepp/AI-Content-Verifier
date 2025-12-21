@@ -1,134 +1,202 @@
-import httpx
 from typing import Dict, Any
-from core.config import settings
 import logging
-import asyncio
+import re
+from core.config import settings
 
 logger = logging.getLogger(__name__)
 
-# Alternative model if primary fails: "distilroberta-base-openai-detector"
-TEXT_MODELS = [
-    "roberta-base-openai-detector",
-    "distilroberta-base-openai-detector",
-    "Hello-SimpleAI/chatgpt-detector-roberta"
-]
+# NOTE: Hugging Face Inference API (api-inference.huggingface.co) is deprecated (410 Gone)
+# Using Gemini API as primary method with heuristic fallback
+
+
+def heuristic_text_analysis(text: str) -> Dict[str, Any]:
+    """
+    Fallback heuristic analysis when API is unavailable
+    """
+    # Simple pattern-based analysis
+    ai_indicators = [
+        r'\b(furthermore|moreover|additionally|consequently)\b',
+        r'\b(it is important to note|it should be noted)\b',
+        r'\b(in conclusion|to summarize|in summary)\b',
+        r'\b(various|numerous|multitude)\b',
+        r'\b(utilize|leverage|facilitate)\b',
+    ]
+    
+    ai_score = 0.0
+    for pattern in ai_indicators:
+        if re.search(pattern, text, re.IGNORECASE):
+            ai_score += 0.15
+    
+    # Check for overly perfect grammar (no contractions, no informal language)
+    if "'" not in text and len(text) > 100:
+        ai_score += 0.1
+    
+    # Normalize
+    ai_score = min(ai_score, 0.9)
+    human_score = 1.0 - ai_score
+    
+    logger.info(f"Heuristic analysis: AI={ai_score:.2f}, Human={human_score:.2f}, Confidence={max(ai_score, human_score):.2f}")
+    
+    return {
+        "is_ai_generated": ai_score > 0.5,
+        "confidence": max(ai_score, human_score),
+        "ai_score": ai_score,
+        "human_score": human_score
+    }
+
+
+async def detect_with_gemini(text: str) -> Dict[str, Any]:
+    """
+    Use Gemini API for text detection (fallback)
+    """
+    if not hasattr(settings, 'GEMINI_API_KEY') or not settings.GEMINI_API_KEY:
+        return None
+    
+    try:
+        import google.generativeai as genai
+        
+        genai.configure(api_key=settings.GEMINI_API_KEY)
+        model = genai.GenerativeModel('gemini-2.0-flash-exp')
+        
+        prompt = f"""Analyze this text to determine if it's AI-generated or human-written.
+
+TEXT TO ANALYZE:
+{text[:2000]}
+
+ANALYSIS CRITERIA:
+1. **Writing Style**: Check for overly formal, repetitive, or generic phrasing
+2. **Sentence Structure**: Look for unnatural uniformity or perfect grammar
+3. **Content Patterns**: Identify AI-typical patterns (lists, structured responses, hedging language)
+4. **Authenticity**: Assess natural flow, personal voice, and human imperfections
+
+OUTPUT FORMAT:
+1. VERDICT: AI-Generated / Human-Written
+2. CONFIDENCE: X/100
+3. REASON: Brief explanation of key indicators
+"""
+        
+        response = model.generate_content(prompt)
+        response_text = response.text
+        
+        logger.info(f"Gemini text analysis complete")
+        
+        # Parse response
+        ai_generated = False
+        human_written = False
+        
+        if "VERDICT:" in response_text or "VERDICT" in response_text:
+            verdict_line = [line for line in response_text.split('\n') if 'VERDICT' in line.upper()][0]
+            
+            # Try brackets first
+            bracket_match = re.search(r'\[(.*?)\]', verdict_line)
+            if bracket_match:
+                verdict_content = bracket_match.group(1).upper()
+            else:
+                # No brackets
+                verdict_content = verdict_line.split(':', 1)[1].strip().upper() if ':' in verdict_line else verdict_line.replace('VERDICT', '', 1).strip().upper()
+            
+            ai_generated = any(keyword in verdict_content for keyword in ["AI-GENERATED", "AI GENERATED", "ARTIFICIAL"])
+            human_written = any(keyword in verdict_content for keyword in ["HUMAN-WRITTEN", "HUMAN WRITTEN", "HUMAN", "REAL"])
+        
+        # Extract confidence
+        confidence = 0.7
+        try:
+            confidence_line = [line for line in response_text.split('\n') if 'CONFIDENCE' in line.upper()][0]
+            bracket_match = re.search(r'\[(\d+)', confidence_line)
+            if bracket_match:
+                conf_value = int(bracket_match.group(1))
+            else:
+                conf_text = confidence_line.split(':', 1)[1] if ':' in confidence_line else confidence_line
+                numbers = re.findall(r'\d+', conf_text)
+                conf_value = int(numbers[0]) if numbers else 70
+            confidence = conf_value / 100.0 if conf_value > 1 else conf_value
+        except:
+            pass
+        
+        # Calculate scores
+        if ai_generated and not human_written:
+            ai_score = round(confidence, 2)
+            real_score = round(1.0 - confidence, 2)
+        elif human_written and not ai_generated:
+            ai_score = round(1.0 - confidence, 2)
+            real_score = round(confidence, 2)
+        else:
+            ai_score = 0.5
+            real_score = 0.5
+        
+        # Extract reason
+        reason = ""
+        try:
+            if "REASON:" in response_text:
+                reason_parts = response_text.split("REASON:")
+                if len(reason_parts) > 1:
+                    reason = reason_parts[1].strip()
+                    # Remove leading number like "3. "
+                    reason = re.sub(r'^\d+\.\s*', '', reason)
+                    logger.info(f"Extracted reason: {reason[:100]}...")
+        except Exception as e:
+            logger.warning(f"Could not parse reason: {e}")
+        
+        logger.info(f"Gemini text detection: AI={ai_score}, Real={real_score}")
+        
+        result = {
+            "ai_score": float(ai_score),
+            "real_score": float(real_score),
+            "confidence": float(confidence)
+        }
+        
+        # Add analysis details if reason exists
+        if reason:
+            result["analysis_details"] = [{
+                "model": "Gemini 2.0 Flash (Text)",
+                "verdict": "AI-Generated" if ai_score > real_score else "Human-Written",
+                "confidence": f"{int(confidence*100)}%",
+                "analysis": reason
+            }]
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"Error with Gemini text detection: {e}")
+        return None
 
 
 async def detect_ai_text(text: str) -> Dict[str, Any]:
     """
-    Detect if text is AI-generated using Hugging Face API
-    Tries multiple models for better reliability
+    Main function to detect if text is AI-generated
+    Uses Gemini API as primary method with heuristic fallback
+    
+    NOTE: Hugging Face Inference API is deprecated (returns 410 Gone)
     """
-    if not text or len(text.strip()) == 0:
+    if not text or len(text.strip()) < 10:
         return {
             "result": False,
             "confidence": 0.5,
-            "ai_score": 0.5,
-            "human_score": 0.5,
-            "error": "Text cannot be empty"
+            "error": "Text too short to analyze"
         }
     
-    # Truncate text if too long (most models have token limits)
-    max_length = 5000  # Conservative limit
-    if len(text) > max_length:
-        text = text[:max_length]
-        logger.warning(f"Text truncated to {max_length} characters")
+    # Try Gemini
+    logger.info("Using Gemini for text detection...")
+    gemini_result = await detect_with_gemini(text)
     
-    async with httpx.AsyncClient(timeout=60.0) as client:
-        for model_name in TEXT_MODELS:
-            try:
-                api_url = f"https://api-inference.huggingface.co/models/{model_name}"
-                headers = {
-                    "Authorization": f"Bearer {settings.HUGGINGFACE_API_KEY}"
-                }
-                
-                payload = {"inputs": text}
-                
-                # Make request
-                response = await client.post(api_url, headers=headers, json=payload)
-                
-                # Handle model loading (503 status)
-                if response.status_code == 503:
-                    # Wait for model to load
-                    retry_after = int(response.headers.get("Retry-After", 30))
-                    logger.info(f"Model {model_name} is loading, waiting {retry_after}s...")
-                    await asyncio.sleep(retry_after)
-                    
-                    # Retry once
-                    response = await client.post(api_url, headers=headers, json=payload)
-                
-                if response.status_code == 200:
-                    result = response.json()
-                    
-                    # Handle different response formats
-                    predictions = None
-                    if isinstance(result, list):
-                        if len(result) > 0:
-                            # Check if it's a list of predictions
-                            if isinstance(result[0], list):
-                                predictions = result[0]
-                            else:
-                                predictions = result
-                    elif isinstance(result, dict):
-                        # Some models return dict with labels
-                        if "label" in result and "score" in result:
-                            predictions = [result]
-                    
-                    if predictions:
-                        ai_score = 0.0
-                        human_score = 0.0
-                        
-                        for pred in predictions:
-                            label = pred.get("label", "").upper()
-                            score = pred.get("score", 0.0)
-                            
-                            if "FAKE" in label or "AI" in label or "GENERATED" in label:
-                                ai_score = max(ai_score, score)
-                            elif "REAL" in label or "HUMAN" in label or "ORIGINAL" in label:
-                                human_score = max(human_score, score)
-                        
-                        # If we have scores, use them
-                        if ai_score > 0 or human_score > 0:
-                            # Normalize if needed
-                            total = ai_score + human_score
-                            if total > 1.0:
-                                ai_score = ai_score / total
-                                human_score = human_score / total
-                            elif total < 0.1:
-                                # Fallback if scores are too low
-                                ai_score = 0.5
-                                human_score = 0.5
-                            
-                            is_ai_generated = ai_score > human_score
-                            confidence = ai_score if is_ai_generated else human_score
-                            
-                            logger.info(f"Text detection successful with {model_name}: AI={ai_score:.2f}, Human={human_score:.2f}")
-                            
-                            return {
-                                "result": is_ai_generated,
-                                "confidence": float(confidence),
-                                "ai_score": float(ai_score),
-                                "human_score": float(human_score),
-                                "model": model_name
-                            }
-                
-                # If we get here, the model didn't work as expected
-                logger.warning(f"Model {model_name} returned unexpected format: {response.status_code}")
-                
-            except httpx.TimeoutException:
-                logger.warning(f"Timeout calling {model_name}, trying next model...")
-                continue
-            except Exception as e:
-                logger.error(f"Error with model {model_name}: {e}")
-                continue
+    if gemini_result:
+        is_ai = gemini_result["ai_score"] > gemini_result["real_score"]
+        return {
+            "result": is_ai,
+            "confidence": float(gemini_result["confidence"]),
+            "ai_score": float(gemini_result["ai_score"]),
+            "real_score": float(gemini_result["real_score"]),
+            "method": "gemini"
+        }
     
-    # All models failed, return fallback
-    logger.error("All text detection models failed")
+    # Fallback to heuristic
+    logger.warning("Gemini failed, using heuristic analysis")
+    heuristic_result = heuristic_text_analysis(text)
+    
     return {
-        "result": False,
-        "confidence": 0.5,
-        "ai_score": 0.5,
-        "human_score": 0.5,
-        "error": "All models failed to process the text"
+        "result": heuristic_result["is_ai_generated"],
+        "confidence": float(heuristic_result["confidence"]),
+        "ai_score": float(heuristic_result["ai_score"]),
+        "real_score": float(heuristic_result["human_score"]),
+        "method": "heuristic"
     }
-
