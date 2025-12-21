@@ -1,5 +1,6 @@
 from pydantic_settings import BaseSettings
-from typing import Optional
+from typing import Optional, Union
+from pydantic import field_validator
 
 
 class Settings(BaseSettings):
@@ -10,7 +11,15 @@ class Settings(BaseSettings):
     HUGGINGFACE_API_KEY: str
     GEMINI_API_KEY: Optional[str] = None  # Optional for enhanced detection
     ENVIRONMENT: str = "development"
-    CORS_ORIGINS: list = ["http://localhost:3000", "http://localhost:5173"]
+    CORS_ORIGINS: Union[str, list] = "http://localhost:3000,http://localhost:5173"
+    
+    @field_validator('CORS_ORIGINS', mode='before')
+    @classmethod
+    def parse_cors_origins(cls, v):
+        if isinstance(v, str):
+            # Split comma-separated string into list
+            return [origin.strip() for origin in v.split(',') if origin.strip()]
+        return v
     
     class Config:
         env_file = ".env"
