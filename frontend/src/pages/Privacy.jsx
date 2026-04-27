@@ -1,5 +1,5 @@
 import React from "react";
-import { FaLock, FaShieldAlt, FaUserShield, FaDatabase, FaEyeSlash } from "react-icons/fa";
+import { FaLock, FaUserShield, FaDatabase, FaEyeSlash } from "react-icons/fa";
 import "./Privacy.css";
 
 const Privacy = () => {
