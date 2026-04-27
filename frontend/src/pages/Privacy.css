@@ -1,198 +1,125 @@
 .privacy-page {
-  max-width: 1000px;
+  max-width: 800px; /* Most compact for policy reading */
   margin: 0 auto;
-  padding: 2rem;
+  padding: 4rem 1.5rem;
 }
 
 .privacy-hero {
   text-align: center;
-  padding: 3rem 0;
-  margin-bottom: 3rem;
+  margin-bottom: 4rem;
 }
 
 .privacy-title {
-  font-size: 3rem;
-  font-weight: 700;
+  font-size: clamp(2rem, 5vw, 3rem);
+  font-weight: 850;
   color: var(--text-primary);
-  margin-bottom: 0.5rem;
+  margin-bottom: 1rem;
+  letter-spacing: -0.03em;
 }
 
 .privacy-subtitle {
-  font-size: 1rem;
+  font-size: 0.9375rem;
   color: var(--text-secondary);
-  margin: 0;
 }
 
 .privacy-content {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 3rem;
 }
 
 .privacy-section {
-  background: var(--card);
-  border-radius: 16px;
-  padding: 2rem;
-  border: 1px solid var(--border-color);
+  padding-bottom: 2.5rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.privacy-section:last-child {
+  border-bottom: none;
 }
 
 .section-title {
-  font-size: 1.75rem;
-  font-weight: 600;
+  font-size: 1.5rem;
+  font-weight: 800;
   color: var(--text-primary);
-  margin-bottom: 1rem;
+  margin-bottom: 1.25rem;
+  letter-spacing: -0.02em;
 }
 
 .section-text {
   font-size: 1rem;
   color: var(--text-secondary);
-  line-height: 1.8;
-  margin-bottom: 1rem;
+  line-height: 1.7;
 }
 
-.section-text:last-child {
-  margin-bottom: 0;
-}
-
-.info-list,
-.usage-list,
-.rights-list {
-  list-style: none;
-  padding: 0;
-  margin: 1rem 0;
-}
-
-.info-item {
-  margin-bottom: 1.5rem;
-  padding-bottom: 1.5rem;
-  border-bottom: 1px solid var(--border-color);
-  transition: background 0.2s ease, padding-left 0.2s ease;
-  padding-left: 0.5rem;
-  border-radius: 8px;
-}
-
-.info-item:hover {
-  background: var(--hover-bg);
-  padding-left: 1rem;
-}
-
-.info-item:last-child {
-  border-bottom: none;
-  margin-bottom: 0;
-  padding-bottom: 0;
-}
-
-.info-item h3 {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin-bottom: 0.5rem;
-}
-
-.info-item p {
-  font-size: 1rem;
-  color: var(--text-secondary);
-  line-height: 1.6;
-  margin: 0;
-}
-
-.usage-list,
-.rights-list {
-  list-style: none;
-  padding-left: 0;
-}
-
-.usage-list li,
-.rights-list li {
-  padding: 0.75rem 0;
-  padding-left: 1.5rem;
-  position: relative;
-  font-size: 1rem;
-  color: var(--text-secondary);
-  line-height: 1.6;
-  transition: color 0.2s ease, transform 0.2s ease;
-  border-radius: 4px;
-}
-
-.usage-list li:hover,
-.rights-list li:hover {
-  color: var(--accent);
-  transform: translateX(4px);
-}
-
-.usage-list li::before,
-.rights-list li::before {
-  content: "✓";
-  position: absolute;
-  left: 0;
-  color: var(--accent);
-  font-weight: 600;
-}
-
-.security-grid {
+.privacy-points-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-template-columns: 1fr 1fr;
   gap: 1.5rem;
-  margin-top: 1.5rem;
+  margin-top: 1rem;
 }
 
-.security-card {
-  background: var(--background);
-  border-radius: 12px;
+.privacy-point-card {
+  display: flex;
+  gap: 1.25rem;
   padding: 1.5rem;
+  background: var(--card);
+  border-radius: 16px;
   border: 1px solid var(--border-color);
-  transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
 }
 
-.security-card:hover {
-  box-shadow: var(--shadow);
-  border-color: var(--accent);
-  transform: translateY(-4px);
-}
-
-.security-icon {
-  font-size: 2rem;
+.point-icon {
+  font-size: 1.25rem;
   color: var(--accent);
-  margin-bottom: 1rem;
+  flex-shrink: 0;
+  margin-top: 0.25rem;
 }
 
-.security-title {
-  font-size: 1.125rem;
-  font-weight: 600;
+.point-info h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: var(--text-primary);
+}
+
+.point-info p {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.policy-block {
+  margin-bottom: 1.5rem;
+}
+
+.policy-block h3 {
+  font-size: 1rem;
+  font-weight: 700;
   color: var(--text-primary);
   margin-bottom: 0.5rem;
 }
 
-.security-description {
-  font-size: 0.95rem;
+.policy-block p {
+  font-size: 0.9375rem;
   color: var(--text-secondary);
   line-height: 1.6;
-  margin: 0;
 }
 
 .privacy-link {
   color: var(--accent);
   text-decoration: none;
-  font-weight: 500;
-  transition: opacity 0.2s ease;
-}
-
-.privacy-link:hover {
-  opacity: 0.8;
-  text-decoration: underline;
+  font-weight: 700;
 }
 
 @media (max-width: 768px) {
   .privacy-page {
-    padding: 1rem;
+    padding: 3rem 1.25rem;
   }
 
-  .privacy-title {
-    font-size: 2rem;
-  }
-
-  .security-grid {
+  .privacy-points-grid {
     grid-template-columns: 1fr;
   }
-}
 
+  .privacy-point-card {
+    padding: 1.25rem;
+  }
+}

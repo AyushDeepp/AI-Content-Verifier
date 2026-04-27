@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -9,6 +9,8 @@ import { ThemeProvider } from "./context/ThemeContext";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import Navbar from "./components/Navbar";
 import Sidebar from "./components/Sidebar";
+import FloatingMenu from "./components/FloatingMenu";
+import Footer from "./components/Footer";
 import ScrollToTop from "./components/ScrollToTop";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
@@ -55,21 +57,17 @@ const PublicRoute = ({ children }) => {
 };
 
 const AppLayout = ({ children }) => {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
-  const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen);
-  };
-
-  const closeSidebar = () => {
-    setIsSidebarOpen(false);
-  };
-
   return (
     <>
-      <Navbar onMenuToggle={toggleSidebar} isMenuOpen={isSidebarOpen} />
-      <Sidebar isOpen={isSidebarOpen} onClose={closeSidebar} />
-      <div className="main-content">{children}</div>
+      <Navbar />
+      <Sidebar />
+      <FloatingMenu />
+      <div className="main-content">
+        <main className="content-wrap">
+          {children}
+        </main>
+        <Footer />
+      </div>
     </>
   );
 };

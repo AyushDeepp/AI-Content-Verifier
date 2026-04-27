@@ -1,31 +1,17 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { FaHome, FaArrowLeft, FaExclamationTriangle } from "react-icons/fa";
-import "./NotFound.css";
+import { FaExclamationTriangle, FaArrowLeft } from "react-icons/fa";
 
 const NotFound = () => {
   return (
-    <div className="not-found-page">
-      <div className="not-found-content">
-        <div className="not-found-icon">
-          <FaExclamationTriangle />
-        </div>
-        <h1 className="not-found-title">404</h1>
-        <h2 className="not-found-subtitle">Page Not Found</h2>
-        <p className="not-found-message">
-          Oops! The page you're looking for doesn't exist or has been moved.
-        </p>
-        <div className="not-found-actions">
-          <Link to="/" className="not-found-button primary">
-            <FaHome /> Go Home
-          </Link>
-          <button
-            onClick={() => window.history.back()}
-            className="not-found-button secondary"
-          >
-            <FaArrowLeft /> Go Back
-          </button>
-        </div>
+    <div className="verifier-page fade-in" style={{ textAlign: 'center', justifyContent: 'center', minHeight: '60vh' }}>
+      <div className="card verifier-card">
+        <FaExclamationTriangle style={{ fontSize: '3rem', color: 'var(--accent)', marginBottom: '1.5rem' }} />
+        <h1 className="page-title">404 - Page Not Found</h1>
+        <p className="page-subtitle">The page you are looking for doesn't exist or has been moved.</p>
+        <Link to="/" className="btn btn-primary" style={{ marginTop: '1rem' }}>
+          <FaArrowLeft /> Back to Home
+        </Link>
       </div>
     </div>
   );

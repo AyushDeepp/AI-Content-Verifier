@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import UploadCard from "../components/UploadCard";
 import ResultCard from "../components/ResultCard";
 import { detectAPI } from "../utils/api";
-import "./VideoVerifier.css";
 
 const VideoVerifier = () => {
   const [file, setFile] = useState(null);
@@ -18,7 +17,6 @@ const VideoVerifier = () => {
 
   const handleVerify = async () => {
     if (!file) return;
-
     setError("");
     setLoading(true);
     setResult(null);
@@ -27,84 +25,60 @@ const VideoVerifier = () => {
       const response = await detectAPI.video(file);
       setResult(response.data);
     } catch (err) {
-      if (err.response?.status === 401) {
-        setError(
-          "Please login to verify content. Sign up for free to get started!"
-        );
-      } else {
-        setError(err.response?.data?.detail || "Failed to verify video");
-      }
+      setError(err.response?.status === 401 ? "Please login to verify content." : err.response?.data?.detail || "Failed to verify video");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="verifier-page">
+    <div className="verifier-page fade-in">
       <div className="verifier-header">
         <h1 className="page-title">Video Verification</h1>
-        <p className="page-subtitle">
-          Upload a video to check if it's AI-generated
-        </p>
+        <p className="page-subtitle">Upload a video to check for AI generation signals.</p>
       </div>
 
-      <div className="verifier-content">
-        <div className="verifier-card">
-          <UploadCard
-            onUpload={handleFileUpload}
-            type="video"
-            accept="video/*"
+      <div className="card verifier-card">
+        <UploadCard
+          onUpload={handleFileUpload}
+          type="video"
+          accept="video/*"
+        />
+
+        {file && (
+          <div className="file-info" style={{ marginTop: '1rem', textAlign: 'center', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+            <p><strong>{file.name}</strong> ({(file.size / 1024 / 1024).toFixed(2)} MB)</p>
+          </div>
+        )}
+
+        {error && <div className="error-msg" style={{ marginTop: '1rem' }}>{error}</div>}
+
+        {file && (
+          <button
+            onClick={handleVerify}
+            className="btn btn-primary"
+            disabled={loading}
+            style={{ marginTop: '1rem' }}
+          >
+            {loading ? "Verifying..." : "Verify Video"}
+          </button>
+        )}
+      </div>
+
+      {result && (
+        <div className="result-container">
+          <ResultCard
+            result={result.result}
+            confidence={result.confidence}
+            type={result.type}
+            timestamp={result.timestamp}
+            content={result.content}
+            explanation={
+              result.analysis_details?.map(d => d.analysis).filter(t => t).join('\n\n')
+            }
           />
-
-          {file && (
-            <div className="file-info-display">
-              <p className="file-name">{file.name}</p>
-              <p className="file-size">
-                {(file.size / 1024 / 1024).toFixed(2)} MB
-              </p>
-            </div>
-          )}
-
-          {error && <div className="error-message">{error}</div>}
-
-          {file && (
-            <button
-              onClick={handleVerify}
-              className="verify-button primary"
-              disabled={loading}
-            >
-              {loading ? "Verifying..." : "Verify Video"}
-            </button>
-          )}
         </div>
-
-        {loading && (
-          <div className="loading-container">
-            <div className="loading-spinner"></div>
-            <p>Analyzing video with AI models...</p>
-          </div>
-        )}
-
-        {result && (
-          <div className="result-container">
-            <ResultCard
-              result={result.result}
-              confidence={result.confidence}
-              type={result.type}
-              timestamp={result.timestamp}
-              content={result.content}
-              explanation={
-                result.analysis_details && result.analysis_details.length > 0
-                  ? result.analysis_details
-                    .map((detail) => detail.analysis || '')
-                    .filter(text => text.length > 0)
-                    .join('\n\n')
-                  : undefined
-              }
-            />
-          </div>
-        )}
-      </div>
+      )}
     </div>
   );
 };

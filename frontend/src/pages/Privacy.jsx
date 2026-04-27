@@ -1,143 +1,93 @@
 import React from "react";
-import Footer from "../components/Footer";
-import { FaLock, FaShieldAlt, FaUserShield, FaDatabase } from "react-icons/fa";
+import { FaLock, FaShieldAlt, FaUserShield, FaDatabase, FaEyeSlash } from "react-icons/fa";
 import "./Privacy.css";
 
 const Privacy = () => {
   const privacyPoints = [
     {
       icon: <FaLock />,
-      title: "Data Encryption",
-      description:
-        "All data transmitted to and from our servers is encrypted using industry-standard SSL/TLS protocols.",
+      title: "End-to-End Encryption",
+      description: "All data transmissions are secured using enterprise-grade TLS 1.3 encryption protocols."
     },
     {
-      icon: <FaShieldAlt />,
-      title: "Content Privacy",
-      description:
-        "We do not store your content without explicit permission. Text content is only stored if you choose to save verification results.",
+      icon: <FaEyeSlash />,
+      title: "No Content Storage",
+      description: "We do not store your uploaded text, images, or videos after analysis is complete."
     },
     {
       icon: <FaUserShield />,
-      title: "User Data Protection",
-      description:
-        "Your personal information is protected and never shared with third parties without your consent.",
+      title: "Identity Protection",
+      description: "Your personal details are never shared with third-party advertisers or data brokers."
     },
     {
       icon: <FaDatabase />,
-      title: "Secure Storage",
-      description:
-        "All stored data is kept in secure databases with regular backups and access controls.",
-    },
+      title: "Secure Infrastructure",
+      description: "Our systems are hosted on highly secure, compliant cloud infrastructure."
+    }
   ];
 
   return (
-    <div className="privacy-page">
+    <div className="privacy-page fade-in">
       <div className="privacy-hero">
-        <h1 className="privacy-title">Privacy Policy</h1>
+        <h1 className="privacy-title">Privacy & Security</h1>
         <p className="privacy-subtitle">
-          Last updated: {new Date().toLocaleDateString()}
+          How we protect your data at Credence AI. Last updated: {new Date().toLocaleDateString()}
         </p>
       </div>
 
       <div className="privacy-content">
         <section className="privacy-section">
-          <h2 className="section-title">Introduction</h2>
+          <h2 className="section-title">Our Privacy Philosophy</h2>
           <p className="section-text">
-            At AI Content Verifier, we take your privacy seriously. This Privacy
-            Policy explains how we collect, use, disclose, and safeguard your
-            information when you use our service.
+            At Credence AI, we believe privacy is a fundamental right. Our system is designed 
+            with <strong>Privacy by Design</strong> principles, ensuring that your content 
+            remains your own throughout the verification process.
           </p>
         </section>
 
         <section className="privacy-section">
-          <h2 className="section-title">Information We Collect</h2>
-          <div className="info-list">
-            <div className="info-item">
-              <h3>Account Information</h3>
-              <p>
-                When you create an account, we collect your name, email address,
-                and a securely hashed password.
-              </p>
-            </div>
-            <div className="info-item">
-              <h3>Verification Data</h3>
-              <p>
-                We may store metadata about your verifications (type, result,
-                confidence, timestamp) to provide dashboard statistics. Text
-                content is only stored if you choose to save results.
-              </p>
-            </div>
-            <div className="info-item">
-              <h3>Usage Data</h3>
-              <p>
-                We collect anonymous usage statistics to improve our service,
-                including feature usage and performance metrics.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        <section className="privacy-section">
-          <h2 className="section-title">How We Use Your Information</h2>
-          <ul className="usage-list">
-            <li>To provide and maintain our verification service</li>
-            <li>To display your verification history and statistics</li>
-            <li>To improve and optimize our detection algorithms</li>
-            <li>To respond to your inquiries and provide support</li>
-            <li>To send important service updates and notifications</li>
-          </ul>
-        </section>
-
-        <section className="privacy-section">
-          <h2 className="section-title">Data Security</h2>
-          <div className="security-grid">
+          <h2 className="section-title">Core Protections</h2>
+          <div className="privacy-points-grid">
             {privacyPoints.map((point, index) => (
-              <div key={index} className="security-card">
-                <div className="security-icon">{point.icon}</div>
-                <h3 className="security-title">{point.title}</h3>
-                <p className="security-description">{point.description}</p>
+              <div key={index} className="privacy-point-card">
+                <div className="point-icon">{point.icon}</div>
+                <div className="point-info">
+                  <h3>{point.title}</h3>
+                  <p>{point.description}</p>
+                </div>
               </div>
             ))}
           </div>
         </section>
 
         <section className="privacy-section">
-          <h2 className="section-title">Your Rights</h2>
-          <p className="section-text">You have the right to:</p>
-          <ul className="rights-list">
-            <li>Access your personal data</li>
-            <li>Request correction of inaccurate data</li>
-            <li>Request deletion of your account and data</li>
-            <li>Export your verification data</li>
-            <li>Opt-out of non-essential communications</li>
-          </ul>
+          <h2 className="section-title">Data Collection & Use</h2>
+          <div className="policy-block">
+            <h3>Account Data</h3>
+            <p>We collect minimal information required for account management: your name, email, and hashed password.</p>
+          </div>
+          <div className="policy-block">
+            <h3>Analysis Data</h3>
+            <p>During analysis, content is processed in volatile memory and is purged immediately after the session ends.</p>
+          </div>
         </section>
 
         <section className="privacy-section">
-          <h2 className="section-title">Third-Party Services</h2>
+          <h2 className="section-title">Your Control</h2>
           <p className="section-text">
-            We use trusted third-party services for hosting, analytics, and
-            email delivery. These services are bound by their own privacy
-            policies and security standards.
+            You maintain full control over your data. You can request account deletion at any time, 
+            which will permanently remove all associated metadata from our systems.
           </p>
         </section>
 
-        <section className="privacy-section">
-          <h2 className="section-title">Contact Us</h2>
+        <section className="privacy-section contact-privacy">
+          <h2 className="section-title">Contact Privacy Team</h2>
           <p className="section-text">
-            If you have questions about this Privacy Policy or wish to exercise
-            your rights, please contact us at{" "}
-            <a
-              href="mailto:privacy@aicontentverifier.com"
-              className="privacy-link"
-            >
-              privacy@aicontentverifier.com
-            </a>
+            If you have specific concerns about your data, reach out to us at: 
+            <a href="mailto:privacy@credenceai.com" className="privacy-link"> privacy@credenceai.com</a>
           </p>
         </section>
       </div>
-      <Footer />
     </div>
   );
 };

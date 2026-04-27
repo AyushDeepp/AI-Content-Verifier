@@ -1,7 +1,6 @@
 .verifier-page {
-  max-width: 1200px;
+  max-width: 800px;
   margin: 0 auto;
-  padding: 0 2rem;
 }
 
 .verifier-header {
@@ -108,25 +107,27 @@
 
 @media (max-width: 480px) {
   .verifier-header h1 {
-    font-size: 1.25rem;
+    font-size: 1.35rem;
   }
 
   .verifier-header p {
-    font-size: 0.875rem;
+    font-size: 0.9rem;
   }
 
   .verifier-card {
-    padding: 0.875rem;
-    gap: 1rem;
+    padding: 1.25rem;
+    border-radius: 16px;
+    gap: 1.25rem;
   }
 
   .image-preview img {
-    max-height: 280px;
+    max-height: 250px;
   }
 
   .verify-button {
-    padding: 0.625rem 1.25rem;
-    font-size: 0.8rem;
+    padding: 0.75rem 1.25rem;
+    font-size: 0.9rem;
+    border-radius: 12px;
   }
 }
 

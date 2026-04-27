@@ -1,14 +1,14 @@
 from pydantic_settings import BaseSettings
 from typing import Optional, Union
-from pydantic import field_validator
+from pydantic import field_validator, Field
 
 
 class Settings(BaseSettings):
-    MONGO_URI: str
-    JWT_SECRET: str
+    MONGO_URI: str = Field(alias='MONGODB_URL')
+    JWT_SECRET: str = Field(alias='JWT_SECRET_KEY')
     JWT_ALGORITHM: str = "HS256"
     JWT_EXPIRATION: int = 86400  # 24 hours in seconds
-    HUGGINGFACE_API_KEY: str
+    HUGGINGFACE_API_KEY: Optional[str] = None  # Optional, not used anymore
     GEMINI_API_KEY: Optional[str] = None  # Optional for enhanced detection
     ENVIRONMENT: str = "development"
     CORS_ORIGINS: Union[str, list] = "http://localhost:3000,http://localhost:5173"
@@ -24,6 +24,7 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
         case_sensitive = True
+        populate_by_name = True  # Allow both field name and alias
 
 
 settings = Settings()

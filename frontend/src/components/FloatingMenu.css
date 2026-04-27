@@ -1,0 +1,124 @@
+.floating-menu-container {
+  display: none !important; /* Hide by default on large screens */
+  position: fixed !important;
+  bottom: 2rem !important;
+  left: 2rem !important;
+  z-index: 9999 !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  gap: 0.75rem;
+  width: auto !important;
+  height: auto !important;
+  pointer-events: none;
+}
+
+@media (max-width: 768px) {
+  .floating-menu-container {
+    display: flex !important; /* Show on mobile */
+    bottom: 1.5rem !important;
+    left: 1.5rem !important;
+    gap: 0.5rem;
+  }
+}
+
+.floating-menu-trigger, 
+.floating-menu-list {
+  pointer-events: auto;
+}
+
+.floating-menu-trigger {
+  width: 50px;
+  height: 50px;
+  border-radius: 12px;
+  background: var(--accent);
+  color: white;
+  border: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  cursor: pointer;
+  box-shadow: none !important; /* Removed all shadows */
+  transition: background 0.2s ease, transform 0.3s ease;
+}
+
+.floating-menu-trigger:hover {
+  background: var(--hover-bg);
+  color: var(--accent);
+}
+
+.open .floating-menu-trigger {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+
+.floating-menu-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  background: var(--card);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 0.5rem;
+  box-shadow: none !important; /* Removed all shadows */
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(10px); /* Simple vertical slide, no scaling */
+  transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  min-width: 180px;
+  backdrop-filter: blur(20px);
+}
+
+.open .floating-menu-list {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.floating-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 1rem;
+  text-decoration: none;
+  color: var(--text-secondary);
+  border-radius: 10px;
+  transition: all 0.15s ease;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.floating-menu-item:hover {
+  background: var(--hover-bg);
+  color: var(--text-primary);
+}
+
+.floating-menu-item.active {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.floating-item-icon {
+  font-size: 1rem;
+}
+
+/* Mobile Adjustments */
+@media (max-width: 768px) {
+  .floating-menu-container {
+    bottom: 1.5rem !important;
+    left: 1.5rem !important;
+    gap: 0.5rem;
+  }
+
+  .floating-menu-trigger {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+  }
+  
+  .floating-menu-list {
+    min-width: 160px;
+    padding: 0.4rem;
+  }
+}

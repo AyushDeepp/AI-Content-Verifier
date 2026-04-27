@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import ResultCard from "../components/ResultCard";
 import { detectAPI } from "../utils/api";
-import "./TextVerifier.css";
 
 const TextVerifier = () => {
   const [text, setText] = useState("");
@@ -10,7 +9,6 @@ const TextVerifier = () => {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    // Check for quick text from home page
     const quickText = sessionStorage.getItem("quickText");
     if (quickText) {
       setText(quickText);
@@ -28,83 +26,60 @@ const TextVerifier = () => {
       const response = await detectAPI.text(text);
       setResult(response.data);
     } catch (err) {
-      if (err.response?.status === 401) {
-        setError(
-          "Please login to verify content. Sign up for free to get started!"
-        );
-      } else {
-        setError(err.response?.data?.detail || "Failed to verify text");
-      }
+      setError(err.response?.status === 401 ? "Please login to verify content." : err.response?.data?.detail || "Failed to verify text");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="verifier-page">
+    <div className="verifier-page fade-in">
       <div className="verifier-header">
         <h1 className="page-title">Text Verification</h1>
-        <p className="page-subtitle">
-          Paste or type text to check if it's AI-generated
-        </p>
+        <p className="page-subtitle">Paste or type text to check for AI generation signals.</p>
       </div>
 
-      <div className="verifier-content">
-        <div className="verifier-card">
-          <form onSubmit={handleSubmit} className="text-form">
-            <div className="form-group">
-              <label htmlFor="text">Text Content</label>
-              <textarea
-                id="text"
-                value={text}
-                onChange={(e) => setText(e.target.value)}
-                placeholder="Enter or paste the text you want to verify..."
-                rows="10"
-                required
-                className="text-input"
-              />
-              <div className="text-count">{text.length} characters</div>
-            </div>
-
-            {error && <div className="error-message">{error}</div>}
-
-            <button
-              type="submit"
-              className="verify-button primary"
-              disabled={loading || !text.trim()}
-            >
-              {loading ? "Verifying..." : "Verify Text"}
-            </button>
-          </form>
-        </div>
-
-        {loading && (
-          <div className="loading-container">
-            <div className="loading-spinner"></div>
-            <p>Analyzing text with AI models...</p>
-          </div>
-        )}
-
-        {result && (
-          <div className="result-container">
-            <ResultCard
-              result={result.result}
-              confidence={result.confidence}
-              type={result.type}
-              timestamp={result.timestamp}
-              content={result.content || text}
-              explanation={
-                result.analysis_details && result.analysis_details.length > 0
-                  ? result.analysis_details
-                    .map((detail) => detail.analysis || '')
-                    .filter(text => text.length > 0)
-                    .join('\n\n')
-                  : undefined
-              }
+      <div className="card verifier-card">
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label htmlFor="text">Content</label>
+            <textarea
+              id="text"
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              placeholder="Enter text to verify..."
+              rows="8"
+              required
+              className="form-textarea"
             />
           </div>
-        )}
+
+          {error && <div className="error-msg">{error}</div>}
+
+          <button
+            type="submit"
+            className="btn btn-primary"
+            disabled={loading || !text.trim()}
+          >
+            {loading ? "Verifying..." : "Verify Content"}
+          </button>
+        </form>
       </div>
+
+      {result && (
+        <div className="result-container">
+          <ResultCard
+            result={result.result}
+            confidence={result.confidence}
+            type={result.type}
+            timestamp={result.timestamp}
+            content={result.content || text}
+            explanation={
+              result.analysis_details?.map(d => d.analysis).filter(t => t).join('\n\n')
+            }
+          />
+        </div>
+      )}
     </div>
   );
 };

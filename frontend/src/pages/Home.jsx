@@ -1,282 +1,194 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import Footer from "../components/Footer";
+import { useAuth } from "../context/AuthContext";
 import {
-    FaFileAlt,
     FaShieldAlt,
     FaBolt,
-    FaLock,
     FaRobot,
     FaArrowRight,
     FaCheckCircle,
-    FaGraduationCap,
-    FaBuilding,
-    FaNewspaper,
-    FaBriefcase,
-    FaChartLine,
+    FaUpload,
+    FaMagic,
+    FaFileAlt
 } from "react-icons/fa";
 import "./Home.css";
-import "./Home_sections.css";
 
 const Home = () => {
+    const { isAuthenticated } = useAuth();
     const [quickText, setQuickText] = useState("");
+    const [typedTitle, setTypedTitle] = useState("");
+    const [isTypingDone, setIsTypingDone] = useState(false);
     const navigate = useNavigate();
+
+    const fullTitle = "Detect AI Content with Confidence";
+
+    useEffect(() => {
+        let index = 0;
+        const typingInterval = setInterval(() => {
+            if (index <= fullTitle.length) {
+                setTypedTitle(fullTitle.slice(0, index));
+                index++;
+            } else {
+                clearInterval(typingInterval);
+                setTimeout(() => setIsTypingDone(true), 500);
+            }
+        }, 60);
+
+        return () => clearInterval(typingInterval);
+    }, []);
 
     const handleQuickVerify = (e) => {
         e.preventDefault();
         if (quickText.trim()) {
-            // Store text in sessionStorage and navigate
             sessionStorage.setItem("quickText", quickText.trim());
             navigate("/text");
         }
     };
 
     return (
-        <div className="home-page">
-            {/* Enhanced Hero Section */}
-            <section className="home-hero">
-                <div className="hero-background">
-                    <div className="hero-gradient-orb orb-1"></div>
-                    <div className="hero-gradient-orb orb-2"></div>
-                    <div className="hero-gradient-orb orb-3"></div>
-                </div>
-
+        <div className="home-page fade-in">
+            {/* Hero Section */}
+            <section className="hero" id="home">
                 <div className="hero-container">
-                    <div className="hero-content">
-                        <h1 className="hero-title">
-                            Detect AI Content
-                            <br />
-                            with <span className="highlight">Precision</span>
-                        </h1>
-
+                    <h1 className="hero-title">
+                        {typedTitle}<span className="cursor">|</span>
+                    </h1>
+                    
+                    <div className={`hero-content-delayed ${isTypingDone ? "visible" : ""}`}>
                         <p className="hero-subtitle">
-                            Advanced multi-model AI detection for text, images, and videos.
-                            Get instant, accurate results with detailed analysis powered by
-                            Google's Gemini 2.0 Flash.
+                            The professional tool for verifying text, images, and videos. 
+                            Powered by state-of-the-art AI detection models.
                         </p>
+                        <div className="hero-actions">
+                            {!isAuthenticated ? (
+                                <>
+                                    <Link to="/signup" className="btn btn-primary btn-glow">
+                                        Get Started Free
+                                    </Link>
+                                    <Link to="/text" className="btn btn-secondary">
+                                        Try Demo
+                                    </Link>
+                                </>
+                            ) : (
+                                <Link to="/dashboard" className="btn btn-primary btn-glow">
+                                    Go to Dashboard
+                                </Link>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </section>
 
-                        <div className="hero-stats">
-                            <div className="stat-item">
-                                <FaCheckCircle className="stat-icon" />
-                                <div className="stat-content">
-                                    <span className="stat-number">95%+</span>
-                                    <span className="stat-label">Accuracy</span>
-                                </div>
+            <div className={`home-rest-content ${isTypingDone ? "visible" : ""}`}>
+                {/* Integrated Quick Verify */}
+                <section className="quick-verify">
+                    <div className="card glass quick-verify-card">
+                        <h2 className="card-title">Quick Verification</h2>
+                        <p className="card-subtitle">Paste text below to check for AI generation signals.</p>
+                        <form onSubmit={handleQuickVerify} className="quick-verify-form">
+                            <textarea
+                                value={quickText}
+                                onChange={(e) => setQuickText(e.target.value)}
+                                placeholder="Type or paste your text here..."
+                                className="quick-textarea"
+                            />
+                            <button
+                                type="submit"
+                                className="btn btn-primary"
+                                disabled={!quickText.trim()}
+                            >
+                                Analyze Text <FaArrowRight />
+                            </button>
+                        </form>
+                    </div>
+                </section>
+
+                {/* How to Use Section */}
+                <section className="how-to-use-section">
+                    <div className="section-header-center">
+                        <h2 className="section-title">How to use?</h2>
+                        <p className="section-subtitle">Get started with Credence AI in three simple steps.</p>
+                    </div>
+                    <div className="steps-container">
+                        <div className="step-card">
+                            <div className="step-icon-box">
+                                <FaUpload />
                             </div>
-                            <div className="stat-item">
-                                <FaBolt className="stat-icon" />
-                                <div className="stat-content">
-                                    <span className="stat-number">Instant</span>
-                                    <span className="stat-label">Results</span>
-                                </div>
+                            <h3>1. Input Content</h3>
+                            <p>Upload your image, video or paste your text into our specialized verifiers.</p>
+                        </div>
+                        <div className="step-connector"></div>
+                        <div className="step-card">
+                            <div className="step-icon-box">
+                                <FaMagic />
                             </div>
-                            <div className="stat-item">
-                                <FaShieldAlt className="stat-icon" />
-                                <div className="stat-content">
-                                    <span className="stat-number">100%</span>
-                                    <span className="stat-label">Secure</span>
-                                </div>
+                            <h3>2. AI Analysis</h3>
+                            <p>Our deep learning models scan for structural patterns and AI artifacts.</p>
+                        </div>
+                        <div className="step-connector"></div>
+                        <div className="step-card">
+                            <div className="step-icon-box">
+                                <FaFileAlt />
                             </div>
+                            <h3>3. Detailed Report</h3>
+                            <p>Receive a comprehensive confidence score and authenticity breakdown.</p>
                         </div>
+                    </div>
+                </section>
 
-                        <div className="hero-buttons">
-                            <Link to="/signup" className="hero-button primary">
-                                <span>Get Started Free</span>
-                                <FaArrowRight className="button-icon" />
-                            </Link>
-                            <Link to="/text" className="hero-button secondary">
-                                <FaFileAlt className="button-icon" />
-                                <span>Try Demo</span>
-                            </Link>
+                {/* Features Grid */}
+                <section className="features-grid-section" id="features">
+                    <div className="section-header-center">
+                        <h2 className="section-title">Why Credence AI?</h2>
+                        <p className="section-subtitle">Advanced detection capabilities across multiple mediums.</p>
+                    </div>
+                    <div className="feature-grid-container">
+                        <div className="card feature-card">
+                            <div className="feature-icon-wrapper">
+                                <FaBolt className="feature-icon" />
+                            </div>
+                            <h3 className="feature-title">Lightning Fast</h3>
+                            <p className="feature-description">
+                                Get accurate results in seconds with our optimized processing engine.
+                            </p>
+                        </div>
+                        <div className="card feature-card">
+                            <div className="feature-icon-wrapper">
+                                <FaShieldAlt className="feature-icon" />
+                            </div>
+                            <h3 className="feature-title">High Accuracy</h3>
+                            <p className="feature-description">
+                                Industry-leading detection rates for GPT-4, Gemini, and Claude models.
+                            </p>
+                        </div>
+                        <div className="card feature-card">
+                            <div className="feature-icon-wrapper">
+                                <FaRobot className="feature-icon" />
+                            </div>
+                            <h3 className="feature-title">Multi-Modal</h3>
+                            <p className="feature-description">
+                                The only platform supporting Text, Image, and Video AI detection.
+                            </p>
                         </div>
                     </div>
-                </div>
-            </section>
+                </section>
 
-            {/* Quick Text Input Section */}
-            <section className="quick-verify-section">
-                <div className="quick-verify-container">
-                    <h2 className="quick-verify-title">
-                        Try it now - Paste text to verify
-                    </h2>
-                    <form onSubmit={handleQuickVerify} className="quick-verify-form">
-                        <textarea
-                            value={quickText}
-                            onChange={(e) => setQuickText(e.target.value)}
-                            placeholder="Paste or type text here to verify if it's AI-generated..."
-                            className="quick-text-input"
-                            rows="4"
-                        />
-                        <button
-                            type="submit"
-                            className="quick-verify-button"
-                            disabled={!quickText.trim()}
-                        >
-                            Verify Text <FaArrowRight />
-                        </button>
-                    </form>
-                </div>
-            </section>
-
-            {/* How It Works Section */}
-            <section className="how-it-works-section">
-                <div className="section-header">
-                    <h2 className="section-title">How It Works</h2>
-                    <p className="section-subtitle">
-                        Three simple steps to verify your content
-                    </p>
-                </div>
-                <div className="steps-container">
-                    <div className="step-card">
-                        <div className="step-number">1</div>
-                        <div className="step-icon">
-                            <FaFileAlt />
-                        </div>
-                        <h3 className="step-title">Upload Content</h3>
-                        <p className="step-description">
-                            Upload your text, image, or video file to our secure platform
-                        </p>
+                {/* Minimalist Trust Bar */}
+                <section className="trust-bar">
+                    <div className="trust-item">
+                        <FaCheckCircle className="trust-icon" />
+                        <span>99% Uptime Detection</span>
                     </div>
-                    <div className="step-card">
-                        <div className="step-number">2</div>
-                        <div className="step-icon">
-                            <FaRobot />
-                        </div>
-                        <h3 className="step-title">AI Analysis</h3>
-                        <p className="step-description">
-                            Our advanced AI models analyze your content using multiple
-                            detection methods
-                        </p>
+                    <div className="trust-item">
+                        <FaCheckCircle className="trust-icon" />
+                        <span>Privacy Protected</span>
                     </div>
-                    <div className="step-card">
-                        <div className="step-number">3</div>
-                        <div className="step-icon">
-                            <FaCheckCircle />
-                        </div>
-                        <h3 className="step-title">Get Results</h3>
-                        <p className="step-description">
-                            Receive instant, detailed results with confidence scores and
-                            analysis
-                        </p>
+                    <div className="trust-item">
+                        <FaCheckCircle className="trust-icon" />
+                        <span>Enterprise Ready</span>
                     </div>
-                </div>
-            </section>
-
-            {/* Features Section */}
-            <section className="features-section">
-                <div className="section-header">
-                    <h2 className="section-title">Powerful Features</h2>
-                    <p className="section-subtitle">
-                        Everything you need to detect AI-generated content
-                    </p>
-                </div>
-                <div className="features-grid">
-                    <div className="feature-card">
-                        <div className="feature-icon">
-                            <FaBolt />
-                        </div>
-                        <h3 className="feature-title">Lightning Fast</h3>
-                        <p className="feature-description">
-                            Get results in seconds with our optimized detection algorithms
-                        </p>
-                    </div>
-                    <div className="feature-card">
-                        <div className="feature-icon">
-                            <FaShieldAlt />
-                        </div>
-                        <h3 className="feature-title">Highly Accurate</h3>
-                        <p className="feature-description">
-                            95%+ accuracy rate using state-of-the-art AI models
-                        </p>
-                    </div>
-                    <div className="feature-card">
-                        <div className="feature-icon">
-                            <FaLock />
-                        </div>
-                        <h3 className="feature-title">Secure & Private</h3>
-                        <p className="feature-description">
-                            Your data is encrypted and never stored or shared
-                        </p>
-                    </div>
-                    <div className="feature-card">
-                        <div className="feature-icon">
-                            <FaChartLine />
-                        </div>
-                        <h3 className="feature-title">Detailed Analysis</h3>
-                        <p className="feature-description">
-                            Get comprehensive reports with confidence scores and insights
-                        </p>
-                    </div>
-                </div>
-            </section>
-
-            {/* Use Cases Section */}
-            <section className="use-cases-section">
-                <div className="section-header">
-                    <h2 className="section-title">Who Uses AI Content Verifier?</h2>
-                    <p className="section-subtitle">
-                        Trusted by professionals across industries
-                    </p>
-                </div>
-                <div className="use-cases-grid">
-                    <div className="use-case-card">
-                        <div className="use-case-icon">
-                            <FaGraduationCap />
-                        </div>
-                        <h3 className="use-case-title">Educators</h3>
-                        <p className="use-case-description">
-                            Verify student submissions and maintain academic integrity
-                        </p>
-                    </div>
-                    <div className="use-case-card">
-                        <div className="use-case-icon">
-                            <FaNewspaper />
-                        </div>
-                        <h3 className="use-case-title">Journalists</h3>
-                        <p className="use-case-description">
-                            Ensure content authenticity and combat misinformation
-                        </p>
-                    </div>
-                    <div className="use-case-card">
-                        <div className="use-case-icon">
-                            <FaBuilding />
-                        </div>
-                        <h3 className="use-case-title">Businesses</h3>
-                        <p className="use-case-description">
-                            Protect brand reputation and verify marketing content
-                        </p>
-                    </div>
-                    <div className="use-case-card">
-                        <div className="use-case-icon">
-                            <FaBriefcase />
-                        </div>
-                        <h3 className="use-case-title">Content Creators</h3>
-                        <p className="use-case-description">
-                            Verify originality and maintain content quality standards
-                        </p>
-                    </div>
-                </div>
-            </section>
-
-            {/* CTA Section */}
-            <section className="cta-section">
-                <div className="cta-container">
-                    <h2 className="cta-title">Ready to Detect AI Content?</h2>
-                    <p className="cta-subtitle">
-                        Join thousands of users who trust our AI detection platform
-                    </p>
-                    <div className="cta-buttons">
-                        <Link to="/signup" className="cta-button primary">
-                            Get Started Free
-                        </Link>
-                        <Link to="/text" className="cta-button secondary">
-                            Try Demo
-                        </Link>
-                    </div>
-                </div>
-            </section>
-
-            <Footer />
+                </section>
+            </div>
         </div>
     );
 };

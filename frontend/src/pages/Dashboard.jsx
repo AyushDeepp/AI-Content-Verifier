@@ -10,10 +10,7 @@ import {
   FaSearch,
   FaChartLine,
   FaLightbulb,
-  FaInfoCircle,
   FaArrowRight,
-  FaCalendarAlt,
-  FaFilter,
   FaRobot,
   FaUser,
 } from "react-icons/fa";
@@ -26,9 +23,6 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState("all");
-  const [pageLimit, setPageLimit] = useState(10);
-  const [currentPage, setCurrentPage] = useState(0);
-  const [totalResults, setTotalResults] = useState(0);
   const [expandedResultId, setExpandedResultId] = useState(null);
 
   const fetchDashboardData = async () => {
@@ -44,16 +38,13 @@ const Dashboard = () => {
 
   const fetchActivityData = useCallback(async () => {
     try {
-      // Fetch all results to filter client-side (since API doesn't support server-side filtering)
       const response = await resultsAPI.getAll(1000, 0);
       let allResults = response.data;
 
-      // Apply type filter
       if (filterType !== "all") {
         allResults = allResults.filter((result) => result.type === filterType);
       }
 
-      // Apply search filter
       if (searchQuery.trim()) {
         const query = searchQuery.toLowerCase();
         allResults = allResults.filter((result) => {
@@ -64,16 +55,11 @@ const Dashboard = () => {
         });
       }
 
-      setTotalResults(allResults.length);
-
-      // Apply pagination
-      const startIndex = currentPage * pageLimit;
-      const endIndex = startIndex + pageLimit;
-      setResults(allResults.slice(startIndex, endIndex));
+      setResults(allResults.slice(0, 10)); // Just show latest 10 for simplicity
     } catch (error) {
       console.error("Failed to fetch activity data:", error);
     }
-  }, [filterType, searchQuery, currentPage, pageLimit]);
+  }, [filterType, searchQuery]);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -88,214 +74,81 @@ const Dashboard = () => {
   }, [isAuthenticated, fetchActivityData]);
 
   const verificationPanels = [
-    {
-      id: "text",
-      label: "Text",
-      icon: FaFileAlt,
-      path: "/text",
-      description: "Detect AI-generated text content",
-      lastUsed: stats?.text_count
-        ? `Used ${stats.text_count} time${stats.text_count !== 1 ? "s" : ""}`
-        : "Never used",
-    },
-    {
-      id: "image",
-      label: "Image",
-      icon: FaImage,
-      path: "/image",
-      description: "Identify AI-generated images",
-      lastUsed: stats?.image_count
-        ? `Used ${stats.image_count} time${stats.image_count !== 1 ? "s" : ""}`
-        : "Never used",
-    },
-    {
-      id: "video",
-      label: "Video",
-      icon: FaVideo,
-      path: "/video",
-      description: "Analyze videos for AI content",
-      lastUsed: stats?.video_count
-        ? `Used ${stats.video_count} time${stats.video_count !== 1 ? "s" : ""}`
-        : "Never used",
-    },
+    { id: "text", label: "Text", icon: FaFileAlt, path: "/text", description: "Detect AI-generated text" },
+    { id: "image", label: "Image", icon: FaImage, path: "/image", description: "Identify AI-generated images" },
+    { id: "video", label: "Video", icon: FaVideo, path: "/video", description: "Analyze videos for AI content" },
   ];
-
-  const quickTips = [
-    {
-      title: "Text Analysis Tips",
-      content:
-        "For best results, provide text samples of at least 100 characters.",
-    },
-    {
-      title: "Image Verification",
-      content:
-        "Upload clear images in common formats (JPG, PNG) for accurate detection.",
-    },
-    {
-      title: "Understanding Confidence",
-      content:
-        "Confidence scores above 70% indicate strong AI detection signals.",
-    },
-  ];
-
-  // Results are already filtered in fetchActivityData
-  const filteredResults = results;
-
-  const handleFilterChange = (type) => {
-    setFilterType(type);
-    setCurrentPage(0); // Reset to first page when filter changes
-  };
-
-  const handlePageLimitChange = (limit) => {
-    setPageLimit(parseInt(limit));
-    setCurrentPage(0);
-  };
-
-  const totalPages = Math.ceil(totalResults / pageLimit);
 
   if (loading) {
     return (
       <div className="dashboard-page">
         <div className="loading-container">
           <div className="loading-spinner"></div>
+          <p>Loading your dashboard...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="dashboard-page">
-      {/* Personalized Greeting Header */}
+    <div className="dashboard-page fade-in">
       <div className="dashboard-header">
-        <div className="greeting-section">
-          <h1 className="greeting-title">
-            Welcome back, {user?.full_name || "User"} 👋
-          </h1>
-          <p className="greeting-subtitle">
-            Ready to verify your content? Choose a verification type below.
-        </p>
-      </div>
+        <h1 className="greeting-title">Hello, {user?.full_name?.split(' ')[0] || "User"}</h1>
+        <p className="greeting-subtitle">Monitor and verify your content authenticity.</p>
       </div>
 
-      {/* Quick Stats Summary Bar */}
       {stats && (
         <div className="stats-bar">
           <div className="stat-item">
-            <div className="stat-value">{stats.total_verifications || 0}</div>
-            <div className="stat-label">Total Verifications</div>
+            <span className="stat-value">{stats.total_verifications || 0}</span>
+            <span className="stat-label">Total Checks</span>
           </div>
-          <div className="stat-divider"></div>
           <div className="stat-item">
-            <div className="stat-value ai-detected">
-              {stats.ai_detected || 0}
-            </div>
-            <div className="stat-label">AI Detected</div>
+            <span className="stat-value" style={{color: 'var(--error)'}}>{stats.ai_detected || 0}</span>
+            <span className="stat-label">AI Detected</span>
           </div>
-          <div className="stat-divider"></div>
           <div className="stat-item">
-            <div className="stat-value human-detected">
-              {stats.human_detected || 0}
-            </div>
-            <div className="stat-label">Human Detected</div>
+            <span className="stat-value" style={{color: 'var(--success)'}}>{stats.human_detected || 0}</span>
+            <span className="stat-label">Human</span>
           </div>
         </div>
       )}
 
-      {/* Main Dashboard Content */}
       <div className="dashboard-content">
         <div className="dashboard-main">
-          {/* Verification Panels */}
-          <div className="verification-panels-section">
-            <h2 className="section-title">Start Verification</h2>
+          <section className="verification-section">
             <div className="verification-panels-grid">
-              {verificationPanels.map((panel) => {
-                const IconComponent = panel.icon;
-          return (
-                  <div key={panel.id} className="verification-panel">
-                    <div className="panel-header">
-                      <div className="panel-icon">
-                        <IconComponent />
-                      </div>
-                      <div className="panel-info">
-                        <h3 className="panel-title">
-                          {panel.label} Verification
-                        </h3>
-                        <p className="panel-description">{panel.description}</p>
-                      </div>
-                    </div>
-                    <div className="panel-footer">
-                      <div className="panel-meta">
-                        <FaCalendarAlt className="meta-icon" />
-                        <span className="meta-text">{panel.lastUsed}</span>
-                      </div>
-                      <Link to={panel.path} className="panel-button">
-                        Start Verification <FaArrowRight />
-                      </Link>
-                    </div>
+              {verificationPanels.map((panel) => (
+                <div key={panel.id} className="verification-panel">
+                  <div className="panel-header">
+                    <div className="panel-icon"><panel.icon /></div>
+                    <h3 className="panel-title">{panel.label}</h3>
                   </div>
-                );
-              })}
+                  <p className="panel-description">{panel.description}</p>
+                  <Link to={panel.path} className="btn btn-primary panel-button">
+                    Start <FaArrowRight />
+                  </Link>
+                </div>
+              ))}
             </div>
-          </div>
+          </section>
 
-          {/* Activity Section */}
-          <div className="activity-section">
+          <section className="activity-section">
             <div className="activity-header">
-              <h2 className="section-title">Activity</h2>
+              <h2 className="section-title">Recent Activity</h2>
               <div className="activity-controls">
-                <div className="filter-controls">
-                  <FaFilter className="filter-icon" />
-                  <button
-                    className={`filter-button ${
-                      filterType === "all" ? "active" : ""
-                    }`}
-                    onClick={() => handleFilterChange("all")}
+                {["all", "text", "image", "video"].map(type => (
+                  <button 
+                    key={type}
+                    className={`filter-button ${filterType === type ? "active" : ""}`}
+                    onClick={() => {setFilterType(type);}}
                   >
-                    All
+                    {type.charAt(0).toUpperCase() + type.slice(1)}
                   </button>
-                  <button
-                    className={`filter-button ${
-                      filterType === "text" ? "active" : ""
-                    }`}
-                    onClick={() => handleFilterChange("text")}
-                  >
-                    Text
-                  </button>
-                  <button
-                    className={`filter-button ${
-                      filterType === "image" ? "active" : ""
-                    }`}
-                    onClick={() => handleFilterChange("image")}
-                  >
-                    Image
-                  </button>
-                  <button
-                    className={`filter-button ${
-                      filterType === "video" ? "active" : ""
-                    }`}
-                    onClick={() => handleFilterChange("video")}
-                  >
-                    Video
-                  </button>
-                </div>
-                <div className="pagination-controls">
-                  <label htmlFor="pageLimit">Show:</label>
-                  <select
-                    id="pageLimit"
-                    value={pageLimit}
-                    onChange={(e) => handlePageLimitChange(e.target.value)}
-                    className="page-limit-select"
-                  >
-                    <option value={10}>10</option>
-                    <option value={20}>20</option>
-                    <option value={50}>50</option>
-                    <option value={100}>100</option>
-                  </select>
-                </div>
+                ))}
               </div>
             </div>
 
-            {/* Search Bar */}
             <div className="activity-search">
               <div className="search-container">
                 <FaSearch className="search-icon" />
@@ -303,259 +156,87 @@ const Dashboard = () => {
                   type="text"
                   placeholder="Search activities..."
                   value={searchQuery}
-                  onChange={(e) => {
-                    setSearchQuery(e.target.value);
-                    setCurrentPage(0);
-                  }}
+                  onChange={(e) => {setSearchQuery(e.target.value);}}
                   className="search-input"
                 />
               </div>
             </div>
 
-            {filteredResults.length === 0 ? (
-              <div className="empty-state">
-                <p className="empty-message">
-                  {searchQuery || filterType !== "all"
-                    ? "No activities match your filters"
-                    : "No verifications yet. Start by verifying your first content!"}
-                </p>
-              </div>
-            ) : (
-              <>
-                <div className="activity-list">
-                  {filteredResults.map((result) => {
-                    const isExpanded = expandedResultId === result.id;
-                    const isAIGenerated = result.result;
-                    const confidencePercent = Math.round(
-                      result.confidence * 100
-                    );
-                    const getResultText = () =>
-                      isAIGenerated ? "AI Generated" : "Human Generated";
-                    const getResultColor = () =>
-                      isAIGenerated ? "#ef4444" : "#10b981";
-
-                    return (
-                      <div key={result.id} className="activity-list-item">
-                        <div
-                          className="activity-item-header"
-                          onClick={() =>
-                            setExpandedResultId(isExpanded ? null : result.id)
-                          }
-                        >
-                          <div className="activity-item-main">
-                            <div
-                              className="activity-item-icon"
-                              style={{ color: getResultColor() }}
-                            >
-                              {isAIGenerated ? <FaRobot /> : <FaUser />}
-                            </div>
-                            <div className="activity-item-info">
-                              <div className="activity-item-title">
-                                {getResultText()}
-                              </div>
-                              <div className="activity-item-meta">
-                                <span className="activity-item-type">
-                                  {result.type.toUpperCase()}
-                                </span>
-                                <span className="activity-item-separator">
-                                  •
-                                </span>
-                                <span className="activity-item-confidence">
-                                  {confidencePercent}% Confidence
-                                </span>
-                                <span className="activity-item-separator">
-                                  •
-                                </span>
-                                <span className="activity-item-time">
-                                  {new Date(result.timestamp).toLocaleString()}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                          <div
-                            className={`activity-item-arrow ${
-                              isExpanded ? "expanded" : ""
-                            }`}
-                          >
-                            <FaArrowRight />
+            <div className="activity-list">
+              {results.length === 0 ? (
+                <div className="empty-state"><p>No activities found.</p></div>
+              ) : (
+                results.map((result) => (
+                  <div key={result.id} className="activity-list-item">
+                    <div className="activity-item-header" onClick={() => setExpandedResultId(expandedResultId === result.id ? null : result.id)}>
+                      <div className="activity-item-main">
+                        <div className="activity-item-icon" style={{ color: result.result ? 'var(--error)' : 'var(--success)' }}>
+                          {result.result ? <FaRobot /> : <FaUser />}
+                        </div>
+                        <div className="activity-item-info">
+                          <div className="activity-item-title">{result.result ? "AI Content" : "Human Content"}</div>
+                          <div className="activity-item-meta">
+                            <span className="activity-item-type">{result.type.toUpperCase()}</span>
+                            <span>•</span>
+                            <span>{Math.round(result.confidence * 100)}% Confidence</span>
+                            <span>•</span>
+                            <span>{new Date(result.timestamp).toLocaleDateString()}</span>
                           </div>
                         </div>
-                        {isExpanded && (
-                          <div className="activity-item-detail">
-                            <ResultCard
-                              result={result.result}
-                              confidence={result.confidence}
-                              type={result.type}
-                              timestamp={result.timestamp}
-                              content={result.content}
-                            />
-                          </div>
-                        )}
                       </div>
-          );
-        })}
-                </div>
-                {totalPages > 1 && (
-                  <div className="pagination">
-                    <button
-                      className="pagination-button"
-                      onClick={() =>
-                        setCurrentPage(Math.max(0, currentPage - 1))
-                      }
-                      disabled={currentPage === 0}
-                    >
-                      Previous
-                    </button>
-                    <span className="pagination-info">
-                      Page {currentPage + 1} of {totalPages}
-                    </span>
-                    <button
-                      className="pagination-button"
-                      onClick={() =>
-                        setCurrentPage(
-                          Math.min(totalPages - 1, currentPage + 1)
-                        )
-                      }
-                      disabled={currentPage >= totalPages - 1}
-                    >
-                      Next
-                    </button>
+                      <div className={`activity-item-arrow ${expandedResultId === result.id ? "expanded" : ""}`}>
+                        <FaArrowRight />
+                      </div>
+                    </div>
+                    {expandedResultId === result.id && (
+                      <div className="activity-item-detail">
+                        <ResultCard {...result} />
+                      </div>
+                    )}
                   </div>
-                )}
+                ))
+              )}
+            </div>
+          </section>
+        </div>
+
+        <aside className="dashboard-sidebar">
+          <div className="insights-card">
+            <div className="insights-header">
+              <FaChartLine className="insights-icon" />
+              <h3 className="insights-title">Insights</h3>
+            </div>
+            {stats && stats.total_verifications > 0 && (
+              <>
+                <div className="chart-bar-container">
+                  <div className="chart-bar ai-bar" style={{ width: `${(stats.ai_detected / stats.total_verifications) * 100}%` }} />
+                  <div className="chart-bar human-bar" style={{ width: `${(stats.human_detected / stats.total_verifications) * 100}%` }} />
+                </div>
+                <div className="insight-item">
+                  <span className="insight-label">AI Rate</span>
+                  <span className="insight-value">{Math.round((stats.ai_detected / stats.total_verifications) * 100)}%</span>
+                </div>
+                <div className="insight-item">
+                  <span className="insight-label">Text checks</span>
+                  <span className="insight-value">{stats.text_count || 0}</span>
+                </div>
               </>
             )}
           </div>
-        </div>
 
-        {/* Sidebar */}
-        <div className="dashboard-sidebar">
-          {/* Quick Tips */}
           <div className="tips-card">
             <div className="tips-header">
               <FaLightbulb className="tips-icon" />
               <h3 className="tips-title">Quick Tips</h3>
             </div>
-            <div className="tips-list">
-              {quickTips.map((tip, index) => (
-                <div key={index} className="tip-item">
-                  <FaInfoCircle className="tip-icon" />
-                  <div className="tip-content">
-                    <div className="tip-title">{tip.title}</div>
-                    <div className="tip-text">{tip.content}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-      </div>
-
-          {/* Insights Mini-Cards */}
-          {stats && (
-            <div className="insights-card">
-              <div className="insights-header">
-                <FaChartLine className="insights-icon" />
-                <h3 className="insights-title">Insights</h3>
+            <div className="tip-item">
+              <div className="tip-content">
+                <div className="tip-title">Better Text Results</div>
+                <p className="tip-text">Provide at least 100 words for higher accuracy.</p>
               </div>
-              {stats.total_verifications > 0 ? (
-                <>
-                  <div className="insights-chart">
-                    <div className="chart-container">
-                      <div className="chart-bar-container">
-                        <div
-                          className="chart-bar ai-bar"
-                          style={{
-                            width: `${
-                              (stats.ai_detected / stats.total_verifications) *
-                              100
-                            }%`,
-                          }}
-                        >
-                          <span className="chart-label">
-                            AI: {stats.ai_detected}
-                          </span>
-                        </div>
-                        <div
-                          className="chart-bar human-bar"
-                          style={{
-                            width: `${
-                              (stats.human_detected /
-                                stats.total_verifications) *
-                              100
-                            }%`,
-                          }}
-                        >
-                          <span className="chart-label">
-                            Human: {stats.human_detected}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="chart-legend">
-                        <div className="legend-item">
-                          <span className="legend-color ai-color"></span>
-                          <span className="legend-text">
-                            AI Generated (
-                            {Math.round(
-                              (stats.ai_detected / stats.total_verifications) *
-                                100
-                            ) || 0}
-                            %)
-                          </span>
-                        </div>
-                        <div className="legend-item">
-                          <span className="legend-color human-color"></span>
-                          <span className="legend-text">
-                            Human Generated (
-                            {Math.round(
-                              (stats.human_detected /
-                                stats.total_verifications) *
-                                100
-                            ) || 0}
-                            %)
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="insights-list">
-                    <div className="insight-item">
-                      <div className="insight-label">Text Verifications</div>
-                      <div className="insight-value">
-                        {stats.text_count || 0}
-                      </div>
-                    </div>
-                    <div className="insight-item">
-                      <div className="insight-label">Image Verifications</div>
-                      <div className="insight-value">
-                        {stats.image_count || 0}
-                      </div>
-                    </div>
-                    <div className="insight-item">
-                      <div className="insight-label">Video Verifications</div>
-                      <div className="insight-value">
-                        {stats.video_count || 0}
-                      </div>
-                    </div>
-                    <div className="insight-item highlight">
-                      <div className="insight-label">AI Detection Rate</div>
-                      <div className="insight-value">
-                        {Math.round(
-                          (stats.ai_detected / stats.total_verifications) * 100
-                        ) || 0}
-                        %
-                      </div>
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <div className="insights-empty">
-                  <p className="empty-message">
-                    No verification data yet. Start verifying content to see
-                    insights!
-                  </p>
-        </div>
-              )}
-        </div>
-          )}
-        </div>
+            </div>
+          </div>
+        </aside>
       </div>
     </div>
   );

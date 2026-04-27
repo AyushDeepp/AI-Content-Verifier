@@ -1,124 +1,50 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import {
-  FaShieldAlt,
-  FaEnvelope,
-  FaFacebook,
-  FaTwitter,
-  FaLinkedin,
-  FaGithub,
-} from "react-icons/fa";
+import { FaTwitter, FaGithub, FaLinkedin } from "react-icons/fa";
 import "./Footer.css";
 
 const Footer = () => {
   return (
     <footer className="footer">
       <div className="footer-container">
-        <div className="footer-content">
-          <div className="footer-section footer-brand-section">
-            <div className="footer-brand">
-              <div className="footer-brand-header">
-                <FaShieldAlt className="footer-logo" />
-                <h3 className="footer-brand-name">AI Content Verifier</h3>
-              </div>
-              <p className="footer-brand-description">
-                Detect AI-generated content with confidence. Verify text,
-                images, and videos using advanced machine learning.
-              </p>
+        <div className="footer-brand">
+          <Link to="/" className="footer-logo">
+            <div className="logo-box-small">
+              <img src="/ailogo.png" alt="Credence AI Logo" className="logo-img" />
             </div>
-          </div>
-
-          <div className="footer-links-wrapper">
-            <div className="footer-section">
-              <h4 className="footer-title">Quick Links</h4>
-              <ul className="footer-links">
-                <li>
-                  <Link to="/">Home</Link>
-                </li>
-                <li>
-                  <Link to="/about">About</Link>
-                </li>
-                <li>
-                  <Link to="/contact">Contact</Link>
-                </li>
-                <li>
-                  <Link to="/privacy">Privacy Policy</Link>
-                </li>
-              </ul>
-            </div>
-
-            <div className="footer-section">
-              <h4 className="footer-title">Verification</h4>
-              <ul className="footer-links">
-                <li>
-                  <Link to="/text">Text Verification</Link>
-                </li>
-                <li>
-                  <Link to="/image">Image Verification</Link>
-                </li>
-                <li>
-                  <Link to="/video">Video Verification</Link>
-                </li>
-                <li>
-                  <Link to="/dashboard">Dashboard</Link>
-                </li>
-              </ul>
-            </div>
-
-            <div className="footer-section">
-              <h4 className="footer-title">Contact Us</h4>
-              <ul className="footer-contact">
-                <li>
-                  <FaEnvelope className="footer-contact-icon" />
-                  <a href="mailto:support@aicontentverifier.com">
-                    support@aicontentverifier.com
-                  </a>
-                </li>
-              </ul>
-              <div className="footer-social">
-                <a
-                  href="https://facebook.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Facebook"
-                >
-                  <FaFacebook />
-                </a>
-                <a
-                  href="https://twitter.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Twitter"
-                >
-                  <FaTwitter />
-                </a>
-                <a
-                  href="https://linkedin.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="LinkedIn"
-                >
-                  <FaLinkedin />
-                </a>
-                <a
-                  href="https://github.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="GitHub"
-                >
-                  <FaGithub />
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="footer-bottom">
-          <p className="footer-copyright">
-            © {new Date().getFullYear()} AI Content Verifier. All rights
-            reserved.
+            <span>Credence AI</span>
+          </Link>
+          <p className="footer-tagline">
+            Ensuring digital integrity through advanced AI detection and verification.
           </p>
+          <div className="footer-socials">
+            {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
+            <a href="#" aria-label="Twitter"><FaTwitter /></a>
+            {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
+            <a href="#" aria-label="GitHub"><FaGithub /></a>
+            {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
+            <a href="#" aria-label="LinkedIn"><FaLinkedin /></a>
+          </div>
         </div>
+
+        <div className="footer-links-group">
+          <div className="footer-column">
+            <h4>Product</h4>
+            <Link to="/text">Text Verifier</Link>
+            <Link to="/image">Image Verifier</Link>
+            <Link to="/video">Video Verifier</Link>
+          </div>
+          <div className="footer-column">
+            <h4>Company</h4>
+            <Link to="/about">About Us</Link>
+            <Link to="/contact">Contact</Link>
+            <Link to="/privacy">Privacy</Link>
+          </div>
+        </div>
+      </div>
+      <div className="footer-bottom">
+        <p>&copy; {new Date().getFullYear()} Credence AI. All rights reserved.</p>
+        <p>Innovation in verification.</p>
       </div>
     </footer>
   );

@@ -1,6 +1,5 @@
 import React from "react";
-import Footer from "../components/Footer";
-import { FaShieldAlt, FaBrain, FaLock, FaChartLine } from "react-icons/fa";
+import { FaShieldAlt, FaBrain, FaLock, FaChartLine, FaGraduationCap } from "react-icons/fa";
 import "./About.css";
 
 const About = () => {
@@ -32,33 +31,59 @@ const About = () => {
   ];
 
   return (
-    <div className="about-page">
+    <div className="about-page fade-in">
       <div className="about-hero">
-        <h1 className="about-title">About AI Content Verifier</h1>
+        <h1 className="about-title">About Credence AI</h1>
         <p className="about-subtitle">
           Empowering trust and authenticity in the digital age
         </p>
       </div>
 
       <div className="about-content">
+        {/* Project Context Section */}
+        <section className="about-section academic-section">
+          <div className="academic-badge">
+            <FaGraduationCap /> Final Year Project
+          </div>
+          <h2 className="section-title">Academic Initiative</h2>
+          <p className="section-text">
+            Credence AI is a sophisticated AI content detection system developed as a 
+            <strong> Final Year Project</strong>. It represents the culmination of academic 
+            research and technical implementation in the field of artificial intelligence and 
+            digital security.
+          </p>
+          <div className="team-container">
+            <h3>Developed By:</h3>
+            <div className="team-grid">
+              <div className="team-member">
+                <span className="member-name">Ayush Deep</span>
+              </div>
+              <div className="team-member">
+                <span className="member-name">Charu Sarswat</span>
+              </div>
+              <div className="team-member">
+                <span className="member-name">Amrendra Kumar Singh</span>
+              </div>
+              <div className="team-member">
+                <span className="member-name">Sonu Rauniyar</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <section className="about-section">
           <h2 className="section-title">Our Mission</h2>
           <p className="section-text">
             In an era where AI-generated content is becoming increasingly
             sophisticated, distinguishing between human-created and AI-generated
-            content is crucial. AI Content Verifier provides a reliable,
+            content is crucial. Credence AI provides a reliable,
             user-friendly platform to verify the authenticity of text, images,
             and videos.
-          </p>
-          <p className="section-text">
-            We believe in transparency and trust. Our mission is to help
-            individuals, educators, businesses, and content creators maintain
-            authenticity in their digital communications.
           </p>
         </section>
 
         <section className="about-section">
-          <h2 className="section-title">Key Features</h2>
+          <h2 className="section-title">Key Capabilities</h2>
           <div className="features-grid">
             {features.map((feature, index) => (
               <div key={index} className="feature-card">
@@ -71,57 +96,19 @@ const About = () => {
         </section>
 
         <section className="about-section">
-          <h2 className="section-title">How It Works</h2>
-          <div className="how-it-works">
-            <div className="step-item">
-              <div className="step-number">1</div>
-              <div className="step-content">
-                <h3>Upload Content</h3>
-                <p>
-                  Upload your text, image, or video content through our
-                  intuitive interface.
-                </p>
-              </div>
-            </div>
-            <div className="step-item">
-              <div className="step-number">2</div>
-              <div className="step-content">
-                <h3>AI Analysis</h3>
-                <p>
-                  Our advanced algorithms analyze patterns, structures, and
-                  artifacts to detect AI generation.
-                </p>
-              </div>
-            </div>
-            <div className="step-item">
-              <div className="step-number">3</div>
-              <div className="step-content">
-                <h3>Get Results</h3>
-                <p>
-                  Receive detailed results with confidence scores and
-                  explanations of the detection process.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="about-section">
-          <h2 className="section-title">Technology</h2>
+          <h2 className="section-title">Technology Stack</h2>
           <p className="section-text">
-            AI Content Verifier leverages state-of-the-art machine learning
+            Credence AI leverages state-of-the-art machine learning
             models trained on diverse datasets to identify AI-generated content.
             Our models continuously learn and adapt to new generation
             techniques, ensuring high accuracy and reliability.
           </p>
           <p className="section-text">
-            Built with modern web technologies including React for the frontend
-            and FastAPI for the backend, ensuring fast, secure, and scalable
-            performance.
+            Built with a modern stack featuring **React** for the intuitive frontend experience 
+            and **FastAPI** for a high-performance, scalable backend infrastructure.
           </p>
         </section>
       </div>
-      <Footer />
     </div>
   );
 };

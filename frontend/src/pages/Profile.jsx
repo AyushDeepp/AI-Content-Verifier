@@ -1,65 +1,27 @@
 import React, { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { authAPI } from "../utils/api";
-import {
-  FaUser,
-  FaEnvelope,
-  FaLock,
-  FaSave,
-  FaEdit,
-  FaTimes,
-} from "react-icons/fa";
-import "./Profile.css";
+import { FaUser, FaEnvelope, FaLock, FaEdit } from "react-icons/fa";
 
 const Profile = () => {
   const { user, fetchUser } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState({
-    fullName: user?.full_name || "",
-    email: user?.email || "",
-  });
-  const [passwordStep, setPasswordStep] = useState("initial"); // "initial", "validating", "new"
+  const [formData, setFormData] = useState({ fullName: user?.full_name || "", email: user?.email || "" });
+  const [passwordStep, setPasswordStep] = useState("initial");
   const [currentPassword, setCurrentPassword] = useState("");
-  const [passwordData, setPasswordData] = useState({
-    newPassword: "",
-    confirmPassword: "",
-  });
+  const [passwordData, setPasswordData] = useState({ newPassword: "", confirmPassword: "" });
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleInputChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
-
-  const handlePasswordChange = (e) => {
-    if (e.target.name === "currentPassword") {
-      setCurrentPassword(e.target.value);
-    } else {
-      setPasswordData({
-        ...passwordData,
-        [e.target.name]: e.target.value,
-      });
-    }
-  };
-
   const handleSaveProfile = async (e) => {
     e.preventDefault();
-    setError("");
-    setSuccess("");
-    setLoading(true);
-
+    setError(""); setSuccess(""); setLoading(true);
     try {
       await authAPI.updateProfile({ full_name: formData.fullName });
       setSuccess("Profile updated successfully!");
       setIsEditing(false);
-      // Refresh user data
-      if (fetchUser) {
-        await fetchUser();
-      }
+      if (fetchUser) await fetchUser();
     } catch (err) {
       setError(err.response?.data?.detail || "Failed to update profile");
     } finally {
@@ -67,27 +29,16 @@ const Profile = () => {
     }
   };
 
-  const handleValidateCurrentPassword = async (e) => {
+  const handleValidatePassword = async (e) => {
     e.preventDefault();
-    setError("");
-    setSuccess("");
-
-    if (!currentPassword) {
-      setError("Please enter your current password");
-      return;
-    }
-
+    setError(""); setSuccess("");
+    if (!currentPassword) return setError("Enter current password");
     setLoading(true);
-    setPasswordStep("validating");
-
     try {
       await authAPI.validatePassword({ current_password: currentPassword });
       setPasswordStep("new");
-      setSuccess("Current password verified. Please enter your new password.");
     } catch (err) {
-      setError(err.response?.data?.detail || "Current password is incorrect");
-      setPasswordStep("initial");
-      setCurrentPassword("");
+      setError(err.response?.data?.detail || "Incorrect password");
     } finally {
       setLoading(false);
     }
@@ -95,33 +46,15 @@ const Profile = () => {
 
   const handleChangePassword = async (e) => {
     e.preventDefault();
-    setError("");
-    setSuccess("");
-
-    if (passwordData.newPassword !== passwordData.confirmPassword) {
-      setError("New passwords do not match");
-      return;
-    }
-
-    if (passwordData.newPassword.length < 6) {
-      setError("Password must be at least 6 characters");
-      return;
-    }
-
+    setError(""); setSuccess("");
+    if (passwordData.newPassword !== passwordData.confirmPassword) return setError("Passwords do not match");
     setLoading(true);
-
     try {
-      await authAPI.changePassword({
-        current_password: currentPassword,
-        new_password: passwordData.newPassword,
-      });
-      setSuccess("Password changed successfully!");
+      await authAPI.changePassword({ current_password: currentPassword, new_password: passwordData.newPassword });
+      setSuccess("Password changed!");
       setPasswordStep("initial");
       setCurrentPassword("");
-      setPasswordData({
-        newPassword: "",
-        confirmPassword: "",
-      });
+      setPasswordData({ newPassword: "", confirmPassword: "" });
     } catch (err) {
       setError(err.response?.data?.detail || "Failed to change password");
     } finally {
@@ -129,212 +62,77 @@ const Profile = () => {
     }
   };
 
-  const handleCancelPasswordChange = () => {
-    setPasswordStep("initial");
-    setCurrentPassword("");
-    setPasswordData({
-      newPassword: "",
-      confirmPassword: "",
-    });
-    setError("");
-    setSuccess("");
-  };
-
-  const handleCancel = () => {
-    setFormData({
-      fullName: user?.full_name || "",
-      email: user?.email || "",
-    });
-    setIsEditing(false);
-    setError("");
-    setSuccess("");
-  };
-
   return (
-    <div className="profile-page">
-      <div className="profile-header">
-        <div className="profile-avatar-large">
-          {user?.full_name?.charAt(0).toUpperCase() || "U"}
-        </div>
-        <div className="profile-info">
-          <h1 className="profile-name">{user?.full_name}</h1>
-          <p className="profile-email">{user?.email}</p>
-        </div>
+    <div className="verifier-page fade-in">
+      <div className="verifier-header">
+        <h1 className="page-title">Profile Settings</h1>
+        <p className="page-subtitle">Manage your account information and security.</p>
       </div>
 
-      {error && <div className="error-message">{error}</div>}
-      {success && <div className="success-message">{success}</div>}
+      {error && <div className="error-msg">{error}</div>}
+      {success && <div className="success-msg">{success}</div>}
 
-      {/* Profile Information Section */}
-      <div className="profile-section">
-        <div className="profile-section-header">
-          <h2 className="section-title">Profile Information</h2>
-          {!isEditing && (
-            <button className="edit-button" onClick={() => setIsEditing(true)}>
-              <FaEdit /> Edit Profile
-            </button>
-          )}
+      <div className="card verifier-card">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+          <h2 style={{ fontSize: '1.125rem', fontWeight: 700 }}>Personal Information</h2>
+          {!isEditing && <button className="btn btn-secondary" onClick={() => setIsEditing(true)}><FaEdit /> Edit</button>}
         </div>
 
         {isEditing ? (
-          <form onSubmit={handleSaveProfile} className="profile-form">
+          <form onSubmit={handleSaveProfile}>
             <div className="form-group">
-              <label htmlFor="fullName">
-                <FaUser className="label-icon" />
-                Full Name
-              </label>
-              <input
-                type="text"
-                id="fullName"
-                name="fullName"
-                value={formData.fullName}
-                onChange={handleInputChange}
-                required
-                placeholder="Enter your full name"
-              />
+              <label><FaUser style={{ marginRight: '0.5rem' }} /> Full Name</label>
+              <input type="text" value={formData.fullName} onChange={(e) => setFormData({ ...formData, fullName: e.target.value })} required className="form-input" />
             </div>
-
             <div className="form-group">
-              <label htmlFor="email">
-                <FaEnvelope className="label-icon" />
-                Email
-              </label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                value={formData.email}
-                disabled
-                placeholder="Email cannot be changed"
-                className="email-disabled"
-              />
+              <label><FaEnvelope style={{ marginRight: '0.5rem' }} /> Email</label>
+              <input type="email" value={formData.email} disabled className="form-input" style={{ opacity: 0.6 }} />
             </div>
-
-            <div className="form-actions">
-              <button
-                type="button"
-                className="cancel-button"
-                onClick={handleCancel}
-              >
-                <FaTimes /> Cancel
-              </button>
-              <button type="submit" className="save-button" disabled={loading}>
-                <FaSave /> {loading ? "Saving..." : "Save Changes"}
-              </button>
+            <div style={{ display: 'flex', gap: '0.75rem' }}>
+              <button type="submit" className="btn btn-primary" disabled={loading}>Save</button>
+              <button type="button" className="btn btn-secondary" onClick={() => setIsEditing(false)}>Cancel</button>
             </div>
           </form>
         ) : (
-          <div className="profile-details">
-            <div className="detail-item">
-              <FaUser className="detail-icon" />
-              <div className="detail-content">
-                <span className="detail-label">Full Name</span>
-                <span className="detail-value">{user?.full_name}</span>
-              </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Full Name</div>
+              <div style={{ fontWeight: 600 }}>{user?.full_name}</div>
             </div>
-            <div className="detail-item">
-              <FaEnvelope className="detail-icon" />
-              <div className="detail-content">
-                <span className="detail-label">Email</span>
-                <span className="detail-value">{user?.email}</span>
-              </div>
+            <div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Email Address</div>
+              <div style={{ fontWeight: 600 }}>{user?.email}</div>
             </div>
           </div>
         )}
       </div>
 
-      {/* Change Password Section */}
-      <div className="profile-section">
-        <div className="profile-section-header">
-          <h2 className="section-title">Change Password</h2>
-        </div>
-
+      <div className="card verifier-card">
+        <h2 style={{ fontSize: '1.125rem', fontWeight: 700, marginBottom: '1.5rem' }}>Security</h2>
         {passwordStep === "initial" ? (
-          <div className="password-initial">
-            <p className="password-description">
-              To change your password, first we need to verify your current
-              password for security.
-            </p>
-            <form
-              onSubmit={handleValidateCurrentPassword}
-              className="profile-form"
-            >
-              <div className="form-group">
-                <label htmlFor="currentPassword">
-                  <FaLock className="label-icon" />
-                  Current Password
-                </label>
-                <input
-                  type="password"
-                  id="currentPassword"
-                  name="currentPassword"
-                  value={currentPassword}
-                  onChange={handlePasswordChange}
-                  required
-                  placeholder="Enter current password"
-                />
-              </div>
-              <div className="form-actions">
-                <button
-                  type="submit"
-                  className="save-button"
-                  disabled={loading}
-                >
-                  <FaLock /> {loading ? "Verifying..." : "Verify Password"}
-                </button>
-              </div>
-            </form>
-          </div>
-        ) : passwordStep === "new" ? (
-          <form onSubmit={handleChangePassword} className="profile-form">
+          <form onSubmit={handleValidatePassword}>
             <div className="form-group">
-              <label htmlFor="newPassword">
-                <FaLock className="label-icon" />
-                New Password
-              </label>
-              <input
-                type="password"
-                id="newPassword"
-                name="newPassword"
-                value={passwordData.newPassword}
-                onChange={handlePasswordChange}
-                required
-                placeholder="Enter new password"
-                minLength={6}
-              />
+              <label><FaLock style={{ marginRight: '0.5rem' }} /> Current Password</label>
+              <input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} required className="form-input" placeholder="Verify current password" />
             </div>
-
+            <button type="submit" className="btn btn-primary" disabled={loading}>Verify & Continue</button>
+          </form>
+        ) : (
+          <form onSubmit={handleChangePassword}>
             <div className="form-group">
-              <label htmlFor="confirmPassword">
-                <FaLock className="label-icon" />
-                Confirm New Password
-              </label>
-              <input
-                type="password"
-                id="confirmPassword"
-                name="confirmPassword"
-                value={passwordData.confirmPassword}
-                onChange={handlePasswordChange}
-                required
-                placeholder="Confirm new password"
-                minLength={6}
-              />
+              <label>New Password</label>
+              <input type="password" value={passwordData.newPassword} onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })} required className="form-input" minLength={6} />
             </div>
-
-            <div className="form-actions">
-              <button
-                type="button"
-                className="cancel-button"
-                onClick={handleCancelPasswordChange}
-              >
-                <FaTimes /> Cancel
-              </button>
-              <button type="submit" className="save-button" disabled={loading}>
-                <FaLock /> {loading ? "Changing..." : "Change Password"}
-              </button>
+            <div className="form-group">
+              <label>Confirm Password</label>
+              <input type="password" value={passwordData.confirmPassword} onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })} required className="form-input" minLength={6} />
+            </div>
+            <div style={{ display: 'flex', gap: '0.75rem' }}>
+              <button type="submit" className="btn btn-primary" disabled={loading}>Update Password</button>
+              <button type="button" className="btn btn-secondary" onClick={() => setPasswordStep("initial")}>Cancel</button>
             </div>
           </form>
-        ) : null}
+        )}
       </div>
     </div>
   );

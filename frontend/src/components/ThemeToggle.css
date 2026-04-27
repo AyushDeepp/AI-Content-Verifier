@@ -1,6 +1,6 @@
 .theme-toggle {
-  width: 45px;
-  height: 45px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   border: none;
   background: var(--card);
@@ -10,16 +10,15 @@
   align-items: center;
   justify-content: center;
   transition: opacity 0.2s ease;
-  box-shadow: var(--shadow);
   border: 1px solid var(--border-color);
 }
 
 .theme-toggle:hover {
-  opacity: 0.9;
+  opacity: 0.8;
 }
 
 .theme-icon {
-  font-size: 1.25rem;
+  font-size: 0.875rem;
   color: var(--accent);
 }
 
