@@ -159,15 +159,15 @@
 }
 
 .step-icon-box {
-  width: 64px;
-  height: 64px;
+  width: 56px;
+  height: 56px;
   background: var(--card);
   border: 1px solid var(--border-color);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   color: var(--accent);
   margin-bottom: 1.5rem;
   transition: all 0.3s ease;
@@ -229,51 +229,71 @@
   margin: 0 auto;
 }
 
-.feature-grid-container {
+.clean-bento-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 350px));
-  gap: 2rem;
-  justify-content: center;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
-.feature-card {
-  padding: 3rem 2rem;
-  text-align: center;
-  border-radius: 24px;
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+.bento-box {
   background: var(--card);
   border: 1px solid var(--border-color);
+  border-radius: 24px;
+  padding: 2rem;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
 }
 
-.feature-card:hover {
-  transform: translateY(-5px);
+.bento-box:hover {
   border-color: var(--accent);
+  background: var(--hover-bg);
 }
 
-.feature-icon-wrapper {
+.bento-wide {
+  grid-column: span 2;
+}
+
+.bento-header {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.bento-icon-box {
   width: 56px;
   height: 56px;
+  min-width: 56px;
   background: var(--accent-soft);
-  border-radius: 16px;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto 2rem;
   color: var(--accent);
-  font-size: 1.5rem;
+  font-size: 1.25rem;
 }
 
-.feature-title {
-  font-size: 1.375rem;
-  font-weight: 750;
-  margin-bottom: 1rem;
+.bento-title {
+  font-size: 1.25rem;
+  font-weight: 800;
   color: var(--text-primary);
+  letter-spacing: -0.02em;
+  margin: 0;
+  flex: 1;
 }
 
-.feature-description {
+.mobile-chevron {
+  display: none; /* Hidden on desktop */
+}
+
+.bento-desc {
   color: var(--text-secondary);
   line-height: 1.6;
-  font-size: 1rem;
+  font-size: 0.9375rem;
+  margin: 0;
 }
 
 /* Trust Bar */
@@ -305,6 +325,17 @@
   font-size: 1.25rem;
 }
 
+/* Tablet / Medium Screens */
+@media (max-width: 1100px) {
+  .clean-bento-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .bento-wide {
+    grid-column: span 2;
+  }
+}
+
 /* Mobile Adjustments */
 @media (max-width: 768px) {
   .hero {
@@ -327,38 +358,68 @@
     width: 100%;
   }
 
-  .feature-grid-container {
+  .clean-bento-grid {
     grid-template-columns: 1fr;
-    max-width: 500px;
-    margin: 0 auto;
     gap: 1rem;
   }
 
-  .feature-card {
-    padding: 1.5rem;
-    display: flex;
-    align-items: center;
-    text-align: left;
-    gap: 1.25rem;
-    border-radius: 20px;
+  .bento-box {
+    grid-column: span 1 !important;
+    padding: 1.125rem;
+    border-radius: 16px;
+    gap: 0; /* Gap managed by collapse container */
+    background: var(--card) !important;
+    border-color: var(--border-color) !important;
+    cursor: pointer;
+    overflow: hidden;
   }
 
-  .feature-icon-wrapper {
-    margin: 0;
-    width: 44px;
-    height: 44px;
-    min-width: 44px;
-    font-size: 1.25rem;
-    border-radius: 12px;
+  .bento-header {
+    width: 100%;
   }
 
-  .feature-title {
-    margin: 0;
-    font-size: 1.125rem;
+  .bento-icon-box {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    font-size: 1rem;
+    border-radius: 10px;
   }
 
-  .feature-description {
-    display: none;
+  .bento-title {
+    font-size: 0.9375rem;
+    font-weight: 700;
+  }
+
+  .mobile-chevron {
+    display: block;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    transition: transform 0.3s ease;
+  }
+
+  .bento-box.is-expanded .mobile-chevron {
+    transform: rotate(180deg);
+    color: var(--accent);
+  }
+
+  .bento-collapse-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    opacity: 0;
+  }
+
+  .bento-box.is-expanded .bento-collapse-content {
+    max-height: 200px;
+    opacity: 1;
+    padding-top: 1rem;
+    padding-left: 3.25rem; /* Align text with title (icon width + gap) */
+  }
+
+  .bento-desc {
+    display: block; /* Overriding previous none */
+    font-size: 0.875rem;
   }
 
   .trust-bar {

@@ -58,7 +58,12 @@ const PublicRoute = ({ children }) => {
 
 const AppLayout = ({ children }) => {
   return (
-    <>
+    <div className="app-container">
+      <div className="bg-effects">
+        <div className="bg-glow bg-glow-1"></div>
+        <div className="bg-glow bg-glow-2"></div>
+        <div className="bg-grid"></div>
+      </div>
       <Navbar />
       <Sidebar />
       <FloatingMenu />
@@ -68,7 +73,7 @@ const AppLayout = ({ children }) => {
         </main>
         <Footer />
       </div>
-    </>
+    </div>
   );
 };
 

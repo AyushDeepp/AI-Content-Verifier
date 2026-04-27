@@ -9,7 +9,12 @@ import {
     FaCheckCircle,
     FaUpload,
     FaMagic,
-    FaFileAlt
+    FaFileAlt,
+    FaLock,
+    FaGraduationCap,
+    FaChartBar,
+    FaGlobe,
+    FaChevronDown
 } from "react-icons/fa";
 import "./Home.css";
 
@@ -18,9 +23,55 @@ const Home = () => {
     const [quickText, setQuickText] = useState("");
     const [typedTitle, setTypedTitle] = useState("");
     const [isTypingDone, setIsTypingDone] = useState(false);
+    const [expandedIndex, setExpandedIndex] = useState(null);
     const navigate = useNavigate();
 
     const fullTitle = "Detect AI Content with Confidence";
+
+    const features = [
+        {
+            icon: <FaRobot />,
+            title: "Multi-Modal Analysis",
+            desc: "Seamlessly verify text, images, and videos using a unified AI detection core. Our cross-medium analysis ensures that no artificial artifact goes unnoticed.",
+            isWide: true
+        },
+        {
+            icon: <FaShieldAlt />,
+            title: "99% Accuracy",
+            desc: "Industry-standard precision for deepfake and LLM detection.",
+            isWide: false
+        },
+        {
+            icon: <FaBolt />,
+            title: "Instant Results",
+            desc: "Optimized processing engine delivering real-time verification scores.",
+            isWide: false
+        },
+        {
+            icon: <FaLock />,
+            title: "Privacy-Centric Core",
+            desc: "We process data in-memory and never persist sensitive uploads. Your privacy is built into the architecture from the ground up.",
+            isWide: true
+        },
+        {
+            icon: <FaGraduationCap />,
+            title: "Academic Roots",
+            desc: "Built as a research-backed Final Year Project.",
+            isWide: false
+        },
+        {
+            icon: <FaChartBar />,
+            title: "Smart Metrics",
+            desc: "Detailed breakdowns of detection confidence levels.",
+            isWide: false
+        },
+        {
+            icon: <FaGlobe />,
+            title: "Global Ready",
+            desc: "Universal detection for diverse linguistic and visual styles.",
+            isWide: false
+        }
+    ];
 
     useEffect(() => {
         let index = 0;
@@ -43,6 +94,11 @@ const Home = () => {
             sessionStorage.setItem("quickText", quickText.trim());
             navigate("/text");
         }
+    };
+
+    const toggleExpand = (index) => {
+        // Only toggle on mobile (handled by CSS, but good to have logic)
+        setExpandedIndex(expandedIndex === index ? null : index);
     };
 
     return (
@@ -136,40 +192,31 @@ const Home = () => {
                     </div>
                 </section>
 
-                {/* Features Grid */}
+                {/* Redesigned Bento Grid with Mobile Accordion */}
                 <section className="features-grid-section" id="features">
                     <div className="section-header-center">
-                        <h2 className="section-title">Why Credence AI?</h2>
-                        <p className="section-subtitle">Advanced detection capabilities across multiple mediums.</p>
+                        <h2 className="section-title">Platform Features</h2>
+                        <p className="section-subtitle">A high-performance detection engine built for modern authentication needs.</p>
                     </div>
-                    <div className="feature-grid-container">
-                        <div className="card feature-card">
-                            <div className="feature-icon-wrapper">
-                                <FaBolt className="feature-icon" />
+                    <div className="clean-bento-grid">
+                        {features.map((feature, index) => (
+                            <div 
+                                key={index} 
+                                className={`bento-box ${feature.isWide ? 'bento-wide' : ''} ${expandedIndex === index ? 'is-expanded' : ''}`}
+                                onClick={() => toggleExpand(index)}
+                            >
+                                <div className="bento-header">
+                                    <div className="bento-icon-box">
+                                        {feature.icon}
+                                    </div>
+                                    <h3 className="bento-title">{feature.title}</h3>
+                                    <FaChevronDown className="mobile-chevron" />
+                                </div>
+                                <div className="bento-collapse-content">
+                                    <p className="bento-desc">{feature.desc}</p>
+                                </div>
                             </div>
-                            <h3 className="feature-title">Lightning Fast</h3>
-                            <p className="feature-description">
-                                Get accurate results in seconds with our optimized processing engine.
-                            </p>
-                        </div>
-                        <div className="card feature-card">
-                            <div className="feature-icon-wrapper">
-                                <FaShieldAlt className="feature-icon" />
-                            </div>
-                            <h3 className="feature-title">High Accuracy</h3>
-                            <p className="feature-description">
-                                Industry-leading detection rates for GPT-4, Gemini, and Claude models.
-                            </p>
-                        </div>
-                        <div className="card feature-card">
-                            <div className="feature-icon-wrapper">
-                                <FaRobot className="feature-icon" />
-                            </div>
-                            <h3 className="feature-title">Multi-Modal</h3>
-                            <p className="feature-description">
-                                The only platform supporting Text, Image, and Video AI detection.
-                            </p>
-                        </div>
+                        ))}
                     </div>
                 </section>
 
@@ -177,7 +224,7 @@ const Home = () => {
                 <section className="trust-bar">
                     <div className="trust-item">
                         <FaCheckCircle className="trust-icon" />
-                        <span>99% Uptime Detection</span>
+                        <span>Academic Excellence</span>
                     </div>
                     <div className="trust-item">
                         <FaCheckCircle className="trust-icon" />
@@ -185,7 +232,7 @@ const Home = () => {
                     </div>
                     <div className="trust-item">
                         <FaCheckCircle className="trust-icon" />
-                        <span>Enterprise Ready</span>
+                        <span>Real-time Insights</span>
                     </div>
                 </section>
             </div>

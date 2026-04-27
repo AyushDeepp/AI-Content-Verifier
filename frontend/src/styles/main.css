@@ -49,6 +49,59 @@ body {
   min-height: 100vh;
 }
 
+.app-container {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+/* Background Effects */
+.bg-effects {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  pointer-events: none;
+  background-color: var(--background);
+}
+
+.bg-glow {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(120px);
+  opacity: 0.15;
+  pointer-events: none;
+}
+
+.bg-glow-1 {
+  width: 50vw;
+  height: 50vw;
+  top: -10vw;
+  right: -10vw;
+  background: var(--accent);
+}
+
+.bg-glow-2 {
+  width: 40vw;
+  height: 40vw;
+  bottom: -5vw;
+  left: -5vw;
+  background: #6366f1; /* Deep indigo for depth */
+}
+
+.bg-grid {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: radial-gradient(var(--border-color) 0.5px, transparent 0.5px);
+  background-size: 32px 32px;
+  opacity: 0.25;
+}
+
 .main-content {
   margin-left: 80px;
   margin-top: 80px;
