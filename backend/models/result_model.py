@@ -5,9 +5,10 @@ from datetime import datetime
 
 class ResultCreate(BaseModel):
     type: Literal["text", "image", "video"]
-    result: bool  # True = AI-generated, False = Human-generated
-    confidence: float  # 0.0 to 1.0
-    content: Optional[str] = None  # For text, store the text content
+    result: bool
+    confidence: float
+    content: Optional[str] = None
+    analysis_details: Optional[list] = None
 
 
 class ResultResponse(BaseModel):
@@ -18,6 +19,7 @@ class ResultResponse(BaseModel):
     confidence: float
     content: Optional[str] = None
     timestamp: datetime
+    analysis_details: Optional[list] = None
     
     class Config:
         from_attributes = True

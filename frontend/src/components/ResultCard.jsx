@@ -2,7 +2,7 @@ import React from "react";
 import { FaRobot, FaUser, FaFileAlt, FaImage, FaVideo, FaDownload } from "react-icons/fa";
 import "./ResultCard.css";
 
-const ResultCard = ({ result, confidence, type, timestamp, content, imagePreview, explanation }) => {
+const ResultCard = ({ result, confidence, type, timestamp, content, imagePreview, explanation, analysis_details }) => {
   const isAIGenerated = result;
   const confidencePercent = Math.round(confidence * 100);
   const color = isAIGenerated ? "var(--error)" : "var(--success)";
@@ -55,7 +55,17 @@ const ResultCard = ({ result, confidence, type, timestamp, content, imagePreview
 
       <div className="analysis-box">
         <div className="analysis-title">Analysis Detail</div>
-        <div className="analysis-text">{explanation || `Detected based on ${type} patterns and ${isAIGenerated ? 'AI signatures' : 'natural characteristics'}.`}</div>
+        <div className="analysis-text">
+          {explanation || (analysis_details && analysis_details.length > 0 ? (
+            <div className="details-list">
+              {analysis_details.map((detail, idx) => (
+                <div key={idx} className="detail-item">
+                  <strong>{detail.model}:</strong> {detail.explanation || detail.analysis || detail.verdict}
+                </div>
+              ))}
+            </div>
+          ) : `Detected based on ${type} patterns and ${isAIGenerated ? 'AI signatures' : 'natural characteristics'}.`)}
+        </div>
       </div>
 
       <div className="result-actions-compact">

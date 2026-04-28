@@ -46,7 +46,8 @@ async def detect_text(
         "result": detection_result["result"],
         "confidence": detection_result["confidence"],
         "content": request.text[:1000],  # Store first 1000 chars
-        "timestamp": datetime.utcnow()
+        "timestamp": datetime.utcnow(),
+        "analysis_details": detection_result.get("analysis_details")
     }
     
     result_id = await results_collection.insert_one(result_doc)
@@ -105,7 +106,8 @@ async def detect_image(
         "result": detection_result["result"],
         "confidence": detection_result["confidence"],
         "content": None,
-        "timestamp": datetime.utcnow()
+        "timestamp": datetime.utcnow(),
+        "analysis_details": detection_result.get("analysis_details")
     }
     
     result_id = await results_collection.insert_one(result_doc)
@@ -164,7 +166,8 @@ async def detect_video(
         "result": detection_result["result"],
         "confidence": detection_result["confidence"],
         "content": None,
-        "timestamp": datetime.utcnow()
+        "timestamp": datetime.utcnow(),
+        "analysis_details": detection_result.get("analysis_details")
     }
     
     result_id = await results_collection.insert_one(result_doc)

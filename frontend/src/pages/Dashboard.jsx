@@ -24,6 +24,8 @@ const Dashboard = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState("all");
   const [expandedResultId, setExpandedResultId] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8;
 
   const fetchDashboardData = async () => {
     try {
@@ -55,7 +57,8 @@ const Dashboard = () => {
         });
       }
 
-      setResults(allResults.slice(0, 10)); // Just show latest 10 for simplicity
+      setResults(allResults);
+      setCurrentPage(1); // Reset to first page on filter/search change
     } catch (error) {
       console.error("Failed to fetch activity data:", error);
     }
@@ -166,35 +169,61 @@ const Dashboard = () => {
               {results.length === 0 ? (
                 <div className="empty-state"><p>No activities found.</p></div>
               ) : (
-                results.map((result) => (
-                  <div key={result.id} className="activity-list-item">
-                    <div className="activity-item-header" onClick={() => setExpandedResultId(expandedResultId === result.id ? null : result.id)}>
-                      <div className="activity-item-main">
-                        <div className="activity-item-icon" style={{ color: result.result ? 'var(--error)' : 'var(--success)' }}>
-                          {result.result ? <FaRobot /> : <FaUser />}
-                        </div>
-                        <div className="activity-item-info">
-                          <div className="activity-item-title">{result.result ? "AI Content" : "Human Content"}</div>
-                          <div className="activity-item-meta">
-                            <span className="activity-item-type">{result.type.toUpperCase()}</span>
-                            <span>•</span>
-                            <span>{Math.round(result.confidence * 100)}% Confidence</span>
-                            <span>•</span>
-                            <span>{new Date(result.timestamp).toLocaleDateString()}</span>
+                <>
+                  {results
+                    .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+                    .map((result) => (
+                      <div key={result.id || result._id} className="activity-list-item">
+                        <div className="activity-item-header" onClick={() => setExpandedResultId(expandedResultId === (result.id || result._id) ? null : (result.id || result._id))}>
+                          <div className="activity-item-main">
+                            <div className="activity-item-icon" style={{ color: result.result ? 'var(--error)' : 'var(--success)' }}>
+                              {result.result ? <FaRobot /> : <FaUser />}
+                            </div>
+                            <div className="activity-item-info">
+                              <div className="activity-item-title">{result.result ? "AI Content" : "Human Content"}</div>
+                              <div className="activity-item-meta">
+                                <span className="activity-item-type">{result.type.toUpperCase()}</span>
+                                <span>•</span>
+                                <span>{Math.round(result.confidence * 100)}% Confidence</span>
+                                <span>•</span>
+                                <span>{new Date(result.timestamp).toLocaleDateString()}</span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className={`activity-item-arrow ${expandedResultId === (result.id || result._id) ? "expanded" : ""}`}>
+                            <FaArrowRight />
                           </div>
                         </div>
+                        {expandedResultId === (result.id || result._id) && (
+                          <div className="activity-item-detail">
+                            <ResultCard {...result} />
+                          </div>
+                        )}
                       </div>
-                      <div className={`activity-item-arrow ${expandedResultId === result.id ? "expanded" : ""}`}>
-                        <FaArrowRight />
-                      </div>
+                    ))}
+                  
+                  {results.length > itemsPerPage && (
+                    <div className="pagination">
+                      <button 
+                        disabled={currentPage === 1} 
+                        onClick={() => setCurrentPage(prev => prev - 1)}
+                        className="page-btn"
+                      >
+                        Prev
+                      </button>
+                      <span className="page-info">
+                        Page {currentPage} of {Math.ceil(results.length / itemsPerPage)}
+                      </span>
+                      <button 
+                        disabled={currentPage === Math.ceil(results.length / itemsPerPage)} 
+                        onClick={() => setCurrentPage(prev => prev + 1)}
+                        className="page-btn"
+                      >
+                        Next
+                      </button>
                     </div>
-                    {expandedResultId === result.id && (
-                      <div className="activity-item-detail">
-                        <ResultCard {...result} />
-                      </div>
-                    )}
-                  </div>
-                ))
+                  )}
+                </>
               )}
             </div>
           </section>

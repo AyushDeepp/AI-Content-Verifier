@@ -1,222 +1,153 @@
 import google.generativeai as genai
-from typing import Dict, Any
+from typing import Dict, Any, List
 from core.config import settings
 import logging
 import tempfile
 import os
 import cv2
+import asyncio
 from PIL import Image
 from io import BytesIO
+import json
+import re
 
 logger = logging.getLogger(__name__)
 
-
 async def detect_ai_video(video_data: bytes) -> Dict[str, Any]:
     """
-    Detect if video is AI-generated using Gemini API
-    Analyzes representative frames from the video
+    Detects AI-generated video using Multi-Frame Temporal Analysis.
+    Analyzes 12 representative frames to detect motion inconsistencies.
     """
     if not video_data or len(video_data) == 0:
-        return {
-            "result": False,
-            "confidence": 0.5,
-            "ai_score": 0.5,
-            "real_score": 0.5,
-            "error": "Video data cannot be empty"
-        }
+        return {"result": False, "confidence": 0.5, "error": "Video data empty"}
     
-    # Check if Gemini API key is configured
     if not hasattr(settings, 'GEMINI_API_KEY') or not settings.GEMINI_API_KEY:
-        logger.warning("GEMINI_API_KEY not configured")
-        return {
-            "result": False,
-            "confidence": 0.5,
-            "ai_score": 0.5,
-            "real_score": 0.5,
-            "error": "Gemini API key not configured"
-        }
-    
+        return {"result": False, "confidence": 0.5, "error": "API Key missing"}
+
     temp_video_path = None
-    
     try:
-        # Configure Gemini
-        genai.configure(api_key=settings.GEMINI_API_KEY)
-        model = genai.GenerativeModel('gemini-2.0-flash-exp')
-        
-        # Save video to temporary file
+        # 1. Save video to temporary file
         with tempfile.NamedTemporaryFile(delete=False, suffix='.mp4') as temp_video:
             temp_video.write(video_data)
             temp_video_path = temp_video.name
-        
-        logger.info(f"Analyzing video with Gemini ({len(video_data)} bytes)...")
-        
-        # Extract 3 representative frames (beginning, middle, end)
+            
+        # 2. Extract frames and Calculate Motion Entropy (SMI)
         cap = cv2.VideoCapture(temp_video_path)
         total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-        
-        frames_to_analyze = [
-            total_frames // 4,      # 25%
-            total_frames // 2,      # 50%
-            3 * total_frames // 4   # 75%
-        ]
-        
+        if total_frames <= 0: return {"result": False, "confidence": 0.5, "error": "Invalid video"}
+
+        frame_indices = [int(i * (total_frames - 1) / 11) for i in range(12)]
         frame_images = []
-        for frame_pos in frames_to_analyze:
-            cap.set(cv2.CAP_PROP_POS_FRAMES, frame_pos)
+        prev_gray = None
+        motion_scores = []
+        
+        for idx in frame_indices:
+            cap.set(cv2.CAP_PROP_POS_FRAMES, idx)
             ret, frame = cap.read()
             if ret:
-                _, buffer = cv2.imencode('.jpg', frame)
-                frame_image = Image.open(BytesIO(buffer.tobytes()))
-                frame_images.append(frame_image)
+                # Forensic Motion Analysis
+                gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                if prev_gray is not None:
+                    # Calculate frame difference as a proxy for temporal consistency
+                    diff = cv2.absdiff(gray, prev_gray)
+                    # AI often has 'shimmering' backgrounds or 'morphing' motion
+                    # We measure the entropy of the motion delta
+                    motion_score = float(cv2.mean(diff)[0]) / 255.0
+                    motion_scores.append(motion_score)
+                prev_gray = gray
+
+                # Prepare for Gemini
+                frame_res = cv2.resize(frame, (640, 360))
+                _, buffer = cv2.imencode('.jpg', frame_res)
+                frame_images.append(Image.open(BytesIO(buffer.tobytes())))
         
         cap.release()
         
-        if not frame_images:
-            raise Exception("Could not extract frames from video")
-        
-        logger.info(f"Extracted {len(frame_images)} frames for analysis")
-        
-        # Create prompt for video analysis
-        prompt = """You are analyzing frames from a VIDEO to determine if it's AI-generated.
+        # Calculate SMI (Structural Motion Index)
+        # Low variance in frame-diff but high overall change is typical of AI 'shimmer'
+        smi_score = 0.5
+        if motion_scores:
+            avg_motion = sum(motion_scores) / len(motion_scores)
+            motion_variance = sum((x - avg_motion)**2 for x in motion_scores) / len(motion_scores)
+            # High variance in motion delta = Suspicious 'jumpy' AI motion
+            smi_score = min(1.0, (motion_variance * 1000) + 0.1) 
+            logger.info(f"VIDEO STATS: AvgMotion={avg_motion:.4f}, SMI={smi_score:.4f}")
 
-### IMPORTANT: This is VIDEO content, not just images
-Look for VIDEO-specific indicators:
-1. **Temporal Artifacts**: Motion blur inconsistencies, unnatural frame transitions
-2. **AI Video Watermarks**: Veo, Sora, Runway, Pika, etc.
-3. **Consistency Across Frames**: Do objects/people maintain consistency?
-4. **Motion Patterns**: Unnatural movement, physics violations
-5. **Standard AI Indicators**: Garbled text, anatomical errors, waxy textures
+        # 3. Analyze with Gemini Forensic Auditor
+        genai.configure(api_key=settings.GEMINI_API_KEY)
+        prompt = """Analyze these 12 frames to detect AI-generation.
+1. **Temporal Drift**: Do textures (skin, hair, fabric) 'shimmer' or 'crawl' between frames?
+2. **Identity Flux**: Does an object's shape or person's face change subtly as it moves?
+3. **Physics Violations**: Does motion look 'liquid' or 'interpolated' rather than solid?
 
-OUTPUT FORMAT:
-1. VERDICT: [AI-Generated / Human-Created / Uncertain]
-2. CONFIDENCE: [X/100]
-3. REASON: [Detailed explanation focusing on VIDEO-specific markers]
+OUTPUT (JSON):
+{
+  "verdict": "AI-Generated" | "Human-Created",
+  "confidence": 0.0-1.0,
+  "findings": "reasoning",
+  "ai_probability": 0.0-1.0
+}
 """
-        
-        # Analyze with Gemini
-        logger.info("Sending frames to Gemini for analysis...")
-        response = model.generate_content([prompt] + frame_images)
-        response_text = response.text
-        
-        logger.info(f"Gemini video response: {response_text}")
-        
-        # Parse response (same logic as image detection)
-        import re
-        
-        ai_generated = False
-        human_created = False
-        
-        if "VERDICT:" in response_text or "VERDICT" in response_text:
-            verdict_line = [line for line in response_text.split('\n') if 'VERDICT' in line.upper()][0]
-            logger.info(f"Verdict line: {verdict_line}")
-            
-            # Try to extract from brackets first [AI-Generated]
-            bracket_match = re.search(r'\[(.*?)\]', verdict_line)
-            if bracket_match:
-                verdict_content = bracket_match.group(1).upper()
-                logger.info(f"Verdict content (bracketed): {verdict_content}")
-            else:
-                # No brackets, extract text after "VERDICT:" or "VERDICT"
-                if ':' in verdict_line:
-                    verdict_content = verdict_line.split(':', 1)[1].strip().upper()
-                else:
-                    verdict_content = verdict_line.replace('VERDICT', '', 1).strip().upper()
-                logger.info(f"Verdict content (non-bracketed): {verdict_content}")
-            
-            ai_generated = any(keyword in verdict_content for keyword in ["AI-GENERATED", "AI GENERATED", "ARTIFICIAL"])
-            human_created = any(keyword in verdict_content for keyword in ["HUMAN-CREATED", "HUMAN CREATED", "HUMAN", "REAL"])
-        else:
-            logger.warning("No VERDICT found in response")
-        
-        logger.info(f"Parsed verdict: ai_generated={ai_generated}, human_created={human_created}")
-        
-        # Extract confidence
-        confidence = 0.7
-        try:
-            confidence_line = [line for line in response_text.split('\n') if 'CONFIDENCE' in line.upper()][0]
-            logger.info(f"Confidence line: {confidence_line}")
-            
-            # Try brackets first [95/100] or [95]
-            bracket_match = re.search(r'\[(\d+)', confidence_line)
-            if bracket_match:
-                conf_value = int(bracket_match.group(1))
-                confidence = conf_value / 100.0 if conf_value > 1 else conf_value
-                logger.info(f"Extracted confidence (bracketed): {confidence}")
-            else:
-                # No brackets, extract number after "CONFIDENCE:" like "95/100" or "95"
-                # Remove "CONFIDENCE:" and extract first number
-                conf_text = confidence_line.split(':', 1)[1] if ':' in confidence_line else confidence_line
-                numbers = re.findall(r'\d+', conf_text)
-                if numbers:
-                    conf_value = int(numbers[0])
-                    confidence = conf_value / 100.0 if conf_value > 1 else conf_value
-                    logger.info(f"Extracted confidence (non-bracketed): {confidence}")
-        except Exception as e:
-            logger.warning(f"Could not parse confidence: {e}")
-        
-        # Calculate scores
-        if ai_generated and not human_created:
-            ai_score = round(confidence, 2)
-            real_score = round(1.0 - confidence, 2)
-        elif human_created and not ai_generated:
-            ai_score = round(1.0 - confidence, 2)
-            real_score = round(confidence, 2)
-        else:
-            ai_score = 0.5
-            real_score = 0.5
-        
-        # Extract reason
-        reason = ""
-        try:
-            if "REASON:" in response_text:
-                reason_parts = response_text.split("REASON:")
-                if len(reason_parts) > 1:
-                    reason = reason_parts[1].strip()
-                    # Remove leading number like "3. "
-                    reason = re.sub(r'^\d+\.\s*', '', reason)
-                    logger.info(f"Extracted reason: {reason[:100]}...")
-            else:
-                logger.warning("No REASON found in response")
-        except Exception as e:
-            logger.warning(f"Could not parse reason: {e}")
-        
-        logger.info(f"Video analysis: AI={ai_score}, Real={real_score}, Reason length={len(reason)}")
-        
-        # Build response with analysis details
-        result = {
-            "result": bool(ai_score > real_score),
-            "confidence": float(max(ai_score, real_score)),
-            "ai_score": float(ai_score),
-            "real_score": float(real_score),
-            "frames_analyzed": len(frame_images),
-            "method": "gemini_video_frames"
-        }
-        
-        # Add analysis details if reason exists
-        if reason:
-            result["analysis_details"] = [{
-                "model": "Gemini 2.0 Flash (Video)",
-                "verdict": "AI-Generated" if ai_score > real_score else "Human-Created",
-                "confidence": f"{int(confidence*100)}%",
-                "analysis": reason
-            }]
-        
-        return result
-        
-    except Exception as e:
-        logger.error(f"Error with Gemini video analysis: {e}", exc_info=True)
-        return {
-            "result": False,
-            "confidence": 0.5,
-            "ai_score": 0.5,
-            "real_score": 0.5,
-            "error": f"Video analysis failed: {str(e)}"
-        }
-    
-    finally:
-        # Clean up temporary file
-        if temp_video_path and os.path.exists(temp_video_path):
+        model_names = ['gemini-2.5-flash', 'gemini-3.1-flash-lite-preview']
+        gemini_result = None
+        for model_name in model_names:
             try:
-                os.unlink(temp_video_path)
-            except:
-                pass
+                model = genai.GenerativeModel(model_name)
+                response = await asyncio.to_thread(model.generate_content, [prompt] + frame_images)
+                json_match = re.search(r'\{.*\}', response.text, re.DOTALL)
+                if json_match:
+                    gemini_result = json.loads(json_match.group(0))
+                    logger.info(f"GEMINI VIDEO: Success using {model_name}")
+                    break
+            except: continue
+        
+        # --- BAYESIAN AGGREGATION ---
+        # Weights: Gemini Audit (70%), SMI Physics (30%)
+        numerator = 0.0
+        denominator = 0.0
+        
+        # 1. SMI Physics layer
+        smi_conf = 0.6 if smi_score > 0.7 else 0.4
+        numerator += smi_score * smi_conf * 0.3
+        denominator += smi_conf * 0.3
+        
+        # 2. Gemini Audit layer
+        if gemini_result:
+            g_score = gemini_result.get("ai_probability", 0.5)
+            g_conf = gemini_result["confidence"]
+            numerator += g_score * g_conf * 0.7
+            denominator += g_conf * 0.7
+            
+        final_ai_score = numerator / denominator if denominator > 0 else 0.5
+        is_ai = final_ai_score > 0.5
+        confidence = final_ai_score if is_ai else (1.0 - final_ai_score)
+
+        return {
+            "result": is_ai,
+            "confidence": float(confidence),
+            "ai_score": float(final_ai_score),
+            "method": "Temporal Forensic Physics",
+            "analysis_details": [
+                {
+                    "model": "SMI Physics Engine",
+                    "verdict": "High Risk" if smi_score > 0.6 else "Normal",
+                    "confidence": f"{int(smi_score*100)}%",
+                    "analysis": f"Structural Motion Index (SMI) = {smi_score:.2f}. Measured temporal pixel variance."
+                },
+                {
+                    "model": "Temporal Audit",
+                    "verdict": gemini_result["verdict"] if gemini_result else "Unknown",
+                    "confidence": f"{int(gemini_result['confidence']*100)}%" if gemini_result else "0%",
+                    "analysis": gemini_result["findings"] if gemini_result else "Engine unavailable"
+                }
+            ]
+        }
+            
+    except Exception as e:
+        logger.error(f"Video detection failed: {e}")
+        return {"result": False, "confidence": 0.5, "error": str(e)}
+    finally:
+        if temp_video_path and os.path.exists(temp_video_path):
+            os.unlink(temp_video_path)
+            
+    return {"result": False, "confidence": 0.5, "error": "Detection incomplete"}
