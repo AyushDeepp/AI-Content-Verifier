@@ -10,6 +10,9 @@ class Settings(BaseSettings):
     JWT_EXPIRATION: int = 86400  # 24 hours in seconds
     HUGGINGFACE_API_KEY: Optional[str] = None  # Optional, not used anymore
     GEMINI_API_KEY: Optional[str] = None  # Optional for enhanced detection
+    GROQ_API_KEY: Optional[str] = None  # For fast text detection
+    SIGHTENGINE_API_USER: Optional[str] = None
+    SIGHTENGINE_API_SECRET: Optional[str] = None
     ENVIRONMENT: str = "development"
     CORS_ORIGINS: Union[str, list] = "http://localhost:3000,http://localhost:5173"
     

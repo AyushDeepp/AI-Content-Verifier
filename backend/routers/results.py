@@ -35,7 +35,8 @@ async def get_user_results(
             result=result["result"],
             confidence=result["confidence"],
             content=result.get("content"),
-            timestamp=result["timestamp"]
+            timestamp=result["timestamp"],
+            analysis_details=result.get("analysis_details")
         )
         for result in results
     ]

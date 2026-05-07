@@ -1,11 +1,16 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
+from fastapi.staticfiles import StaticFiles
+import os
 import logging
 
 from core.config import settings
 from core.database import connect_to_mongo, close_mongo_connection
+from core.key_rotator import init_rotators
 from routers import auth, detect, results, contact
+
+os.makedirs("uploads", exist_ok=True)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -16,6 +21,7 @@ async def lifespan(app: FastAPI):
     """Startup and shutdown events"""
     # Startup
     await connect_to_mongo()
+    init_rotators(settings.GEMINI_API_KEY or "", settings.GROQ_API_KEY or "")
     yield
     # Shutdown
     await close_mongo_connection()
@@ -45,6 +51,22 @@ app.include_router(auth.router)
 app.include_router(detect.router)
 app.include_router(results.router)
 app.include_router(contact.router)
+
+from starlette.middleware.base import BaseHTTPMiddleware
+
+class UploadsCORPMiddleware(BaseHTTPMiddleware):
+    """Add Cross-Origin-Resource-Policy header to /uploads static files
+       so browsers allow cross-origin video/image playback."""
+    async def dispatch(self, request, call_next):
+        response = await call_next(request)
+        if request.url.path.startswith("/uploads"):
+            response.headers["Cross-Origin-Resource-Policy"] = "cross-origin"
+            response.headers["Access-Control-Allow-Origin"] = "*"
+        return response
+
+app.add_middleware(UploadsCORPMiddleware)
+
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 
 @app.get("/")

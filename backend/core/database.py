@@ -17,7 +17,11 @@ mongodb = MongoDB()
 async def connect_to_mongo():
     """Create database connection"""
     try:
-        mongodb.client = AsyncIOMotorClient(settings.MONGO_URI)
+        mongodb.client = AsyncIOMotorClient(
+            settings.MONGO_URI,
+            serverSelectionTimeoutMS=10000,
+            connectTimeoutMS=10000
+        )
         mongodb.database = mongodb.client.get_database("ai_content_verifier")
         logger.info("Connected to MongoDB")
     except Exception as e:

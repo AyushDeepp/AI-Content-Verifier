@@ -1,18 +1,28 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import UploadCard from "../components/UploadCard";
 import ResultCard from "../components/ResultCard";
 import { detectAPI } from "../utils/api";
 
 const VideoVerifier = () => {
   const [file, setFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [processingStatus, setProcessingStatus] = useState("");
   const [error, setError] = useState("");
+  const prevUrlRef = useRef(null);
 
-  const handleFileUpload = (selectedFile) => {
-    setFile(selectedFile);
-    setResult(null);
+  const handleFileUpload = (uploadedFile) => {
+    // Revoke old object URL to prevent memory leaks
+    if (prevUrlRef.current) {
+      URL.revokeObjectURL(prevUrlRef.current);
+    }
+    const url = URL.createObjectURL(uploadedFile);
+    prevUrlRef.current = url;
+    setFile(uploadedFile);
+    setPreviewUrl(url);
     setError("");
+    setResult(null);
   };
 
   const handleVerify = async () => {
@@ -22,12 +32,19 @@ const VideoVerifier = () => {
     setResult(null);
 
     try {
+      setProcessingStatus("Uploading and analyzing video...");
       const response = await detectAPI.video(file);
       setResult(response.data);
     } catch (err) {
-      setError(err.response?.status === 401 ? "Please login to verify content." : err.response?.data?.detail || "Failed to verify video");
+      console.error("Verification error:", err);
+      setError(
+        err.response?.status === 401
+          ? "Please login to verify content."
+          : err.response?.data?.detail || "Failed to process video"
+      );
     } finally {
       setLoading(false);
+      setProcessingStatus("");
     }
   };
 
@@ -42,25 +59,44 @@ const VideoVerifier = () => {
         <UploadCard
           onUpload={handleFileUpload}
           type="video"
+          placeholder="Upload or drag & drop video files"
           accept="video/*"
         />
 
-        {file && (
-          <div className="file-info" style={{ marginTop: '1rem', textAlign: 'center', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-            <p><strong>{file.name}</strong> ({(file.size / 1024 / 1024).toFixed(2)} MB)</p>
+        {/* Local Video Preview — Uses blob URL, no server needed */}
+        {previewUrl && (
+          <div style={{ marginTop: "1.5rem", borderRadius: "12px", overflow: "hidden", background: "#000" }}>
+            <video
+              key={previewUrl}
+              src={previewUrl}
+              controls
+              style={{ width: "100%", maxHeight: "360px", display: "block" }}
+            >
+              Your browser does not support the video tag.
+            </video>
+            <p style={{ margin: "0.5rem 0 0 0", fontSize: "0.8rem", color: "var(--text-secondary)", textAlign: "center", padding: "0.5rem" }}>
+              {file?.name} — {(file?.size / 1024 / 1024).toFixed(2)} MB
+            </p>
           </div>
         )}
 
-        {error && <div className="error-msg" style={{ marginTop: '1rem' }}>{error}</div>}
+        {processingStatus && (
+          <div className="processing-status" style={{ marginTop: "1rem", textAlign: "center", color: "var(--primary)" }}>
+            <div className="loading-spinner-small" style={{ display: "inline-block", marginRight: "8px" }}></div>
+            {processingStatus}
+          </div>
+        )}
+
+        {error && <div className="error-msg" style={{ marginTop: "1rem" }}>{error}</div>}
 
         {file && (
           <button
             onClick={handleVerify}
             className="btn btn-primary"
             disabled={loading}
-            style={{ marginTop: '1rem' }}
+            style={{ marginTop: "1rem", width: "100%" }}
           >
-            {loading ? "Verifying..." : "Verify Video"}
+            {loading ? "Analyzing..." : "Verify Video"}
           </button>
         )}
       </div>
@@ -74,7 +110,7 @@ const VideoVerifier = () => {
             timestamp={result.timestamp}
             content={result.content}
             explanation={
-              result.analysis_details?.map(d => d.analysis).filter(t => t).join('\n\n')
+              result.analysis_details?.map((d) => d.analysis).filter((t) => t).join("\n\n")
             }
           />
         </div>

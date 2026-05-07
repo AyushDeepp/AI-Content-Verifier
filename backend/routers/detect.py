@@ -1,6 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status
 from motor.motor_asyncio import AsyncIOMotorCollection
 from typing import Annotated
+import os
+import uuid
 from datetime import datetime
 from bson import ObjectId
 from pydantic import BaseModel
@@ -96,6 +98,15 @@ async def detect_image(
     # Perform detection
     detection_result = await detect_ai_image(image_data)
     
+    # Save file to uploads folder
+    file_ext = file.filename.split(".")[-1] if "." in file.filename else "png"
+    file_name = f"{uuid.uuid4()}.{file_ext}"
+    file_path = os.path.join("uploads", file_name)
+    with open(file_path, "wb") as f:
+        f.write(image_data)
+        
+    file_url = f"/uploads/{file_name}"
+    
     # Save result to database
     db = get_database()
     results_collection: AsyncIOMotorCollection = db["results"]
@@ -105,7 +116,7 @@ async def detect_image(
         "type": "image",
         "result": detection_result["result"],
         "confidence": detection_result["confidence"],
-        "content": None,
+        "content": file_url,
         "timestamp": datetime.utcnow(),
         "analysis_details": detection_result.get("analysis_details")
     }
@@ -119,7 +130,7 @@ async def detect_image(
         "type": "image",
         "result": detection_result["result"],
         "confidence": detection_result["confidence"],
-        "content": None,
+        "content": file_url,
         "timestamp": result_doc["timestamp"]
     }
     
@@ -156,6 +167,15 @@ async def detect_video(
     # Perform detection
     detection_result = await detect_ai_video(video_data)
     
+    # Save file to uploads folder
+    file_ext = file.filename.split(".")[-1] if "." in file.filename else "mp4"
+    file_name = f"{uuid.uuid4()}.{file_ext}"
+    file_path = os.path.join("uploads", file_name)
+    with open(file_path, "wb") as f:
+        f.write(video_data)
+        
+    file_url = f"/uploads/{file_name}"
+    
     # Save result to database
     db = get_database()
     results_collection: AsyncIOMotorCollection = db["results"]
@@ -165,7 +185,7 @@ async def detect_video(
         "type": "video",
         "result": detection_result["result"],
         "confidence": detection_result["confidence"],
-        "content": None,
+        "content": file_url,
         "timestamp": datetime.utcnow(),
         "analysis_details": detection_result.get("analysis_details")
     }
@@ -179,7 +199,7 @@ async def detect_video(
         "type": "video",
         "result": detection_result["result"],
         "confidence": detection_result["confidence"],
-        "content": None,
+        "content": file_url,
         "timestamp": result_doc["timestamp"]
     }
     

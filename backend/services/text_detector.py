@@ -3,84 +3,73 @@ import re
 import math
 import asyncio
 import httpx
+import json
 from typing import Dict, Any, List, Optional
 from core.config import settings
 from huggingface_hub import InferenceClient
+from groq import AsyncGroq
+from core.key_rotator import get_gemini_rotator, get_groq_rotator
 
 logger = logging.getLogger(__name__)
 
 # --- ENGINE 1: STATISTICAL ANALYSIS (LOCAL) ---
 
 def calculate_text_statistics(text: str) -> Dict[str, Any]:
-    """Courtroom-grade Forensic Statistical Analysis"""
-    # 1. Structural Tokenization
-    paragraphs = [p.strip() for p in text.split('\n\n') if p.strip()]
-    sentences = [s.strip() for s in re.split(r'[.!?]+', text) if s.strip()]
+    """
+    Calculates advanced statistical cues: Burstiness, Entropy, Redundancy, and Stopword ratios.
+    """
+    sentences = re.split(r'[.!?]+', text)
+    sentences = [s.strip() for s in sentences if len(s.strip()) > 5]
     words = re.findall(r'\w+', text.lower())
     
     if not sentences or not words:
-        return {"stat_score": 0.5, "burstiness": 0, "entropy": 0}
+        return {"ai_score": 0.5, "reliability": 0.0, "details": "Insufficient text"}
 
-    # 2. Rolling Burstiness (Local vs Global Variance)
-    # Humans vary sentence lengths locally; AI is consistent globally.
-    sentence_lengths = [len(s.split()) for s in sentences]
+    # 1. Burstiness (Sentence Length Variance)
+    lengths = [len(s.split()) for s in sentences]
+    avg_len = sum(lengths) / len(sentences)
+    variance = sum((l - avg_len) ** 2 for l in lengths) / len(sentences)
+    burstiness = math.sqrt(variance) / (avg_len + 1)
     
-    # Global Burstiness
-    global_mean = sum(sentence_lengths) / len(sentence_lengths)
-    global_std = math.sqrt(sum((x - global_mean) ** 2 for x in sentence_lengths) / len(sentence_lengths))
-    global_burst = global_std / global_mean if global_mean > 0 else 0
+    # 2. Shannon Entropy (Vocabulary Complexity)
+    word_freq = {}
+    for w in words:
+        word_freq[w] = word_freq.get(w, 0) + 1
     
-    # Paragraph-level (Rolling) Burstiness Variance
-    para_bursts = []
-    for para in paragraphs:
-        p_sents = [s.strip() for s in re.split(r'[.!?]+', para) if s.strip()]
-        if len(p_sents) > 1:
-            p_lens = [len(s.split()) for s in p_sents]
-            p_mean = sum(p_lens) / len(p_lens)
-            p_std = math.sqrt(sum((x - p_mean) ** 2 for x in p_lens) / len(p_lens))
-            para_bursts.append(p_std / p_mean if p_mean > 0 else 0)
+    entropy = 0
+    for count in word_freq.values():
+        p = count / len(words)
+        entropy -= p * math.log2(p)
     
-    # Consistency across paragraphs (AI is very consistent)
-    para_consistency = 1.0 - (sum(para_bursts) / len(para_bursts) if para_bursts else 0)
+    # 3. Redundancy (Lexical Diversity)
+    unique_ratio = len(word_freq) / len(words)
+    redundancy = 1.0 - unique_ratio # AI tends to be more redundant (lower unique ratio)
+    
+    # 4. Stopword Density
+    # Common English stopwords (subset for performance)
+    stopwords = {"the", "a", "an", "is", "are", "was", "were", "to", "of", "and", "in", "that", "it", "with", "as", "for", "on"}
+    stopword_count = sum(1 for w in words if w in stopwords)
+    stopword_density = stopword_count / len(words)
+    
+    # AI models often have a "sweet spot" of stopword density around 40-50%
+    # Humans vary much more (very low or very high density)
+    is_ai_stopword_density = 0.8 if 0.4 < stopword_density < 0.55 else 0.2
 
-    # 3. Bigram Entropy (Conditional Probability Proxy)
-    # AI word sequences are highly predictable.
-    bigrams = [" ".join(words[i:i+2]) for i in range(len(words)-1)]
-    bigram_counts = {}
-    for b in bigrams:
-        bigram_counts[b] = bigram_counts.get(b, 0) + 1
-    
-    b_entropy = 0
-    total_bigrams = len(bigrams) if bigrams else 1
-    for count in bigram_counts.values():
-        p = count / total_bigrams
-        b_entropy -= p * math.log2(p)
-    
-    # Normalize Bigram Entropy (Typically lower for AI)
-    # Human bigram entropy is usually > 7.0 for 500+ words
-    norm_b_entropy = min(max((b_entropy - 3.0) / 6.0, 0), 1.0)
-
-    # 4. Syntactic Regularity & AI Anchors
-    ai_anchors = ["moreover", "furthermore", "consequently", "additionally", "in conclusion", 
-                  "it is important to note", "on the other hand", "overall", "specifically"]
-    marker_density = sum(1 for w in ai_anchors if w in text.lower()) / (len(sentences) if sentences else 1)
-
-    # --- FORENSIC AGGREGATION ---
-    # AI indicators: Low Global Burstiness, High Para Consistency, Low Bigram Entropy, High Marker Density
-    ai_score = (
-        (1.0 - global_burst) * 0.25 +
-        para_consistency * 0.25 +
-        (1.0 - norm_b_entropy) * 0.30 +
-        (min(marker_density * 3.0, 1.0)) * 0.20
-    )
-    
-    logger.info(f"FORENSIC STATS: Global_Burst={global_burst:.2f}, Para_Consistency={para_consistency:.2f}, B_Entropy={b_entropy:.2f}")
+    # --- AGGREGATED STATISTICAL VOTE ---
+    # High AI score if: Low Burstiness, Low Entropy, High Redundancy
+    ai_score = 0.0
+    if burstiness < 0.3: ai_score += 0.3 # Robotic consistency
+    if entropy < 7.5: ai_score += 0.2    # Simple vocabulary
+    if redundancy > 0.4: ai_score += 0.3 # Repetitive phrasing
+    ai_score += is_ai_stopword_density * 0.2
     
     return {
-        "burstiness": float(global_burst),
-        "para_consistency": float(para_consistency),
-        "entropy": float(b_entropy),
-        "stat_score": float(ai_score)
+        "ai_score": ai_score,
+        "burstiness": burstiness,
+        "entropy": entropy,
+        "redundancy": redundancy,
+        "stopword_density": stopword_density,
+        "reliability": 0.8
     }
 
 # --- ENGINE 2: HUGGING FACE CLASSIFIERS ---
@@ -148,21 +137,30 @@ OUTPUT FORMAT (Strict JSON):
   "explanation": "Brief 2-sentence forensic summary"
 }}
 """
-        # Fallback logic for quota management
-        model_names = ['gemini-2.5-flash', 'gemini-3.1-flash-lite-preview']
+        gemini_keys = get_gemini_rotator()
+        if not gemini_keys.has_keys:
+            return None
+        
+        model_names = ['gemini-flash-latest', 'gemini-2.0-flash-lite', 'gemini-2.0-flash']
         response = None
         
         for model_name in model_names:
-            try:
-                model = genai.GenerativeModel(model_name)
-                response = await asyncio.to_thread(model.generate_content, prompt)
-                if response:
-                    logger.info(f"GEMINI ENGINE: Success using {model_name}")
+            for attempt in range(gemini_keys.count):
+                try:
+                    genai.configure(api_key=gemini_keys.current)
+                    model = genai.GenerativeModel(model_name)
+                    response = await asyncio.to_thread(model.generate_content, prompt)
+                    if response:
+                        logger.info(f"GEMINI ENGINE: Success using {model_name}")
+                        break
+                except Exception as e:
+                    if "429" in str(e) or "quota" in str(e).lower():
+                        gemini_keys.rotate()
+                        continue
+                    logger.warning(f"Gemini {model_name} unavailable: {e}")
                     break
-            except Exception as e:
-                # Silently log warning and continue to next model or finish
-                logger.warning(f"Gemini {model_name} unavailable: {e}")
-                continue
+            if response:
+                break
         
         if not response:
             return None
@@ -175,6 +173,48 @@ OUTPUT FORMAT (Strict JSON):
     except Exception as e:
         logger.error(f"Gemini audit failed: {e}")
     return None
+
+# --- ENGINE 4: GROQ LINGUISTIC ACCELERATOR ---
+
+async def get_groq_audit(text: str) -> Dict[str, Any]:
+    """Uses Groq (Llama 3) for ultra-fast linguistic analysis"""
+    groq_keys = get_groq_rotator()
+    if not groq_keys.has_keys:
+        return None
+        
+    try:
+        prompt = f"""Analyze the following text to detect AI-generation. Look for:
+        1. Predictable transitions and circular logic.
+        2. Lack of specific, messy human details.
+        3. Stylometric rigidity.
+        
+        TEXT: "{text[:2000]}"
+        
+        RETURN JSON:
+        {{
+          "verdict": "AI-Generated" | "Human-Written",
+          "confidence": 0.0-1.0,
+          "explanation": "Brief 1-sentence reason"
+        }}
+        """
+        
+        for attempt in range(groq_keys.count):
+            try:
+                client = AsyncGroq(api_key=groq_keys.current)
+                response = await client.chat.completions.create(
+                    messages=[{"role": "user", "content": prompt}],
+                    model="llama-3.3-70b-versatile",
+                    response_format={"type": "json_object"}
+                )
+                return json.loads(response.choices[0].message.content)
+            except Exception as e:
+                if "429" in str(e) or "rate" in str(e).lower():
+                    groq_keys.rotate()
+                    continue
+                raise
+    except Exception as e:
+        logger.error(f"Groq audit failed: {e}")
+        return None
 
 # --- ENSEMBLE ORCHESTRATOR ---
 
@@ -194,7 +234,7 @@ async def detect_ai_text(text: str) -> Dict[str, Any]:
     
     # 2. Query HF models in parallel (Modern DeBERTa-v3 is superior for GPT-4)
     hf_models = [
-        "unikev/ai-detector-deberta-v3-large-v2",
+        "Hello-SimpleAI/chatgpt-detector-roberta",
         "openai-community/roberta-base-openai-detector"
     ]
     
@@ -202,18 +242,22 @@ async def detect_ai_text(text: str) -> Dict[str, Any]:
     hf_results = await asyncio.gather(*hf_tasks)
     valid_hf_scores = [s for s in hf_results if s is not None]
     
-    # 3. Get Gemini Audit
-    gemini_audit = await get_gemini_audit(text)
+    
+    # 3. Get LLM Audits
+    gemini_task = get_gemini_audit(text)
+    groq_task = get_groq_audit(text)
+    
+    gemini_audit, groq_audit = await asyncio.gather(gemini_task, groq_task)
     
     # --- CONTRADICTION-PENALIZED BAYESIAN AGGREGATION ---
     
-    weights = {"hf": 0.45, "gemini": 0.35, "stats": 0.20}
+    weights = {"hf": 0.40, "groq": 0.30, "gemini": 0.20, "stats": 0.10}
     numerator = 0.0
     denominator = 0.0
     
     # Statistical baseline (Very reliable for structural fingerprints)
-    s_score = stats["stat_score"]
-    s_conf = 0.8 if stats["burstiness"] < 0.3 else 0.5 # High confidence in AI if burstiness is critically low
+    s_score = stats["ai_score"]
+    s_conf = stats["reliability"]
     
     numerator += s_score * s_conf * weights["stats"]
     denominator += s_conf * weights["stats"]
@@ -239,6 +283,15 @@ async def detect_ai_text(text: str) -> Dict[str, Any]:
         
         numerator += g_score * g_conf * weights["gemini"]
         denominator += g_conf * weights["gemini"]
+
+    # Groq evidence
+    if groq_audit:
+        gr_verdict = groq_audit["verdict"]
+        gr_conf = groq_audit["confidence"]
+        gr_score = gr_conf if gr_verdict == "AI-Generated" else (1.0 - gr_conf)
+        
+        numerator += gr_score * gr_conf * weights["groq"]
+        denominator += gr_conf * weights["groq"]
     
     # Final Bayesian-lite Score
     final_ai_score = numerator / denominator if denominator > 0 else 0.5
@@ -252,26 +305,55 @@ async def detect_ai_text(text: str) -> Dict[str, Any]:
     analysis_details = []
     if valid_hf_scores:
         analysis_details.append({
-            "model": "Ensemble HF Classifiers",
+            "model": "Neural Classifier",
             "verdict": "AI-Generated" if avg_hf > 0.5 else "Human-Written",
             "confidence": f"{int(max(avg_hf, 1-avg_hf)*100)}%",
-            "analysis": "Analyzed deep neural patterns and statistical fingerprints."
+            "analysis": (
+                f"The text was analyzed using neural networks trained on millions of human and AI-generated "
+                f"text samples. These models detect deep statistical patterns in word choices and sentence "
+                f"structures that are invisible to the human eye but reliably distinguish machine-generated text."
+            )
         })
     
     if gemini_audit:
         reports = gemini_audit.get("agent_reports", {})
         analysis_details.append({
-            "model": "Multi-Agent Forensic Audit",
+            "model": "Forensic Audit",
             "verdict": gemini_audit["verdict"],
             "confidence": f"{int(gemini_audit['confidence']*100)}%",
-            "analysis": f"{gemini_audit['explanation']} [Stylometrics: {reports.get('stylometrics')}, Personality: {reports.get('personality')}]"
+            "analysis": (
+                f"{gemini_audit['explanation']} "
+                f"Writing style: {reports.get('stylometrics', 'N/A')}. "
+                f"Personality markers: {reports.get('personality', 'N/A')}. "
+                f"This analysis examines whether the text shows genuine human idiosyncrasies "
+                f"(personal anecdotes, unique word choices, natural flaws) or robotic consistency."
+            )
+        })
+
+    if groq_audit:
+        analysis_details.append({
+            "model": "Linguistic Analysis",
+            "verdict": groq_audit["verdict"],
+            "confidence": f"{int(groq_audit['confidence']*100)}%",
+            "analysis": (
+                f"{groq_audit['explanation']} "
+                f"This check looks for predictable transitions, circular reasoning, "
+                f"and lack of specific, messy human details that AI text typically lacks."
+            )
         })
         
     analysis_details.append({
-        "model": "Signature Statistics",
-        "verdict": "AI-Generated" if stats["stat_score"] > 0.5 else "Human-Written",
-        "confidence": f"{int(max(stats['stat_score'], 1-stats['stat_score'])*100)}%",
-        "analysis": f"Burstiness: {stats['burstiness']:.2f}, Para Consistency: {stats['para_consistency']:.2f}, Entropy: {stats['entropy']:.2f}"
+        "model": "Statistical Analysis",
+        "verdict": "AI-Generated" if stats['ai_score'] > 0.5 else "Human-Written",
+        "confidence": f"{int(stats['ai_score']*100)}%",
+        "analysis": (
+            f"Burstiness: {stats['burstiness']:.2f} — measures how much sentence length varies "
+            f"(AI text tends to have very uniform sentence lengths, humans vary more). "
+            f"Entropy: {stats['entropy']:.2f} — measures vocabulary richness "
+            f"(AI uses simpler, more predictable word choices). "
+            f"Redundancy: {stats['redundancy']:.2f} — measures how often words/phrases are repeated "
+            f"(AI tends to be more repetitive)."
+        )
     })
     
     return {
