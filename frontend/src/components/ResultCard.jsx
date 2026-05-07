@@ -19,8 +19,11 @@ const ResultCard = ({ result, confidence, type, timestamp, content, imagePreview
 
   const getMediaUrl = () => {
     if (imagePreview) return imagePreview;
-    if (content && typeof content === 'string' && content.startsWith('/uploads')) {
-      return `${API_BASE_URL}${content}`;
+    if (content && typeof content === 'string') {
+      // R2 full URL (production)
+      if (content.startsWith('http://') || content.startsWith('https://')) return content;
+      // Local /uploads/ path (development)
+      if (content.startsWith('/uploads')) return `${API_BASE_URL}${content}`;
     }
     return null;
   };

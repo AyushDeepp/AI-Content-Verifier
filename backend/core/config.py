@@ -13,6 +13,12 @@ class Settings(BaseSettings):
     GROQ_API_KEY: Optional[str] = None  # For fast text detection
     SIGHTENGINE_API_USER: Optional[str] = None
     SIGHTENGINE_API_SECRET: Optional[str] = None
+    R2_ACCOUNT_ID: Optional[str] = None
+    R2_ACCESS_KEY_ID: Optional[str] = None
+    R2_SECRET_ACCESS_KEY: Optional[str] = None
+    R2_BUCKET_NAME: Optional[str] = None
+    R2_PUBLIC_URL: Optional[str] = None
+    R2_REGION: str = "auto"
     ENVIRONMENT: str = "development"
     CORS_ORIGINS: Union[str, list] = "http://localhost:3000,http://localhost:5173"
     

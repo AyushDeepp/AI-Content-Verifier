@@ -9,6 +9,7 @@ from pydantic import BaseModel
 
 from routers.auth import get_current_user
 from core.database import get_database
+from core.r2_storage import is_r2_configured, upload_to_r2
 from services.text_detector import detect_ai_text
 from services.image_detector import detect_ai_image
 from services.video_detector import detect_ai_video
@@ -21,6 +22,15 @@ class TextDetectRequest(BaseModel):
     text: str
 
 
+def save_file(file_data: bytes, file_name: str, content_type: str) -> str:
+    """Save file to R2 if configured, otherwise local uploads/ folder."""
+    if is_r2_configured():
+        return upload_to_r2(file_data, file_name, content_type)
+    else:
+        file_path = os.path.join("uploads", file_name)
+        with open(file_path, "wb") as f:
+            f.write(file_data)
+        return f"/uploads/{file_name}"
 
 
 @router.post("/text")
@@ -98,14 +108,10 @@ async def detect_image(
     # Perform detection
     detection_result = await detect_ai_image(image_data)
     
-    # Save file to uploads folder
+    # Save file to R2 or local
     file_ext = file.filename.split(".")[-1] if "." in file.filename else "png"
     file_name = f"{uuid.uuid4()}.{file_ext}"
-    file_path = os.path.join("uploads", file_name)
-    with open(file_path, "wb") as f:
-        f.write(image_data)
-        
-    file_url = f"/uploads/{file_name}"
+    file_url = save_file(image_data, file_name, file.content_type or "image/png")
     
     # Save result to database
     db = get_database()
@@ -167,14 +173,10 @@ async def detect_video(
     # Perform detection
     detection_result = await detect_ai_video(video_data)
     
-    # Save file to uploads folder
+    # Save file to R2 or local
     file_ext = file.filename.split(".")[-1] if "." in file.filename else "mp4"
     file_name = f"{uuid.uuid4()}.{file_ext}"
-    file_path = os.path.join("uploads", file_name)
-    with open(file_path, "wb") as f:
-        f.write(video_data)
-        
-    file_url = f"/uploads/{file_name}"
+    file_url = save_file(video_data, file_name, file.content_type or "video/mp4")
     
     # Save result to database
     db = get_database()
@@ -208,4 +210,5 @@ async def detect_video(
         response_data["analysis_details"] = detection_result["analysis_details"]
     
     return response_data
+
 
