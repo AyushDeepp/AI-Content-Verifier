@@ -302,6 +302,39 @@ body {
   padding: 2rem;
 }
 
+.result-container {
+  scroll-margin-top: 1rem;
+}
+
+@media (max-width: 600px) {
+  .verifier-page {
+    gap: 1rem;
+  }
+
+  .verifier-card {
+    padding: 1rem;
+  }
+
+  .page-title {
+    font-size: 1.35rem;
+  }
+
+  .page-subtitle {
+    font-size: 0.8rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .btn {
+    width: 100%;
+    padding: 0.65rem 1rem;
+    font-size: 0.875rem;
+  }
+
+  .form-textarea {
+    font-size: 0.85rem;
+  }
+}
+
 .form-group {
   margin-bottom: 1.25rem;
 }

@@ -1,5 +1,5 @@
 import React from "react";
-import { FaRobot, FaUser, FaFileAlt, FaImage, FaVideo, FaDownload } from "react-icons/fa";
+import { FaRobot, FaUser, FaFileAlt, FaImage, FaVideo, FaDownload, FaCheckCircle } from "react-icons/fa";
 import { API_BASE_URL } from "../utils/api";
 import "./ResultCard.css";
 
@@ -29,13 +29,20 @@ const ResultCard = ({ result, confidence, type, timestamp, content, imagePreview
 
   return (
     <div className="result-card-v2" style={{ "--status-color": color }}>
+      <div className="analysis-complete-banner">
+        <FaCheckCircle className="banner-icon" />
+        <span className="banner-text">
+          Analysis Complete — {isAIGenerated ? "AI Signatures Detected" : "No AI Signatures Found"}
+        </span>
+      </div>
+
       <div className="result-header-compact">
         <div className="status-indicator">
           <div className="status-icon-box">
             {isAIGenerated ? <FaRobot /> : <FaUser />}
           </div>
           <div className="status-text">
-            <div className="status-label">{isAIGenerated ? "AI Generated" : "Human Generated"}</div>
+            <div className="status-label">{isAIGenerated ? "AI Generated" : "Human Created"}</div>
             <div className="status-meta">{type?.toUpperCase()} Content</div>
           </div>
         </div>

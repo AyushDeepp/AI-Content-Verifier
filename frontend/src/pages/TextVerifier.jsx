@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import ResultCard from "../components/ResultCard";
 import { detectAPI } from "../utils/api";
 
@@ -7,6 +7,13 @@ const TextVerifier = () => {
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const resultRef = useRef(null);
+
+  useEffect(() => {
+    if (result && resultRef.current) {
+      resultRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [result]);
 
   useEffect(() => {
     const quickText = sessionStorage.getItem("quickText");
@@ -61,13 +68,21 @@ const TextVerifier = () => {
             className="btn btn-primary"
             disabled={loading || !text.trim()}
           >
-            {loading ? "Verifying..." : "Verify Content"}
+            {loading ? "Analyzing..." : "Verify Content"}
           </button>
         </form>
       </div>
 
+      {loading && (
+        <div className="verifier-loading-box">
+          <div className="loading-spinner"></div>
+          <div className="loading-text">Analyzing Text...</div>
+          <div className="loading-subtext">Running linguistic forensics — this may take a few seconds</div>
+        </div>
+      )}
+
       {result && (
-        <div className="result-container">
+        <div className="result-container" ref={resultRef}>
           <ResultCard
             result={result.result}
             confidence={result.confidence}

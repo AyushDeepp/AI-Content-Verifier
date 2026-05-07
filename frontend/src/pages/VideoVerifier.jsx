@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import UploadCard from "../components/UploadCard";
 import ResultCard from "../components/ResultCard";
 import { detectAPI } from "../utils/api";
@@ -11,6 +11,13 @@ const VideoVerifier = () => {
   const [processingStatus, setProcessingStatus] = useState("");
   const [error, setError] = useState("");
   const prevUrlRef = useRef(null);
+  const resultRef = useRef(null);
+
+  useEffect(() => {
+    if (result && resultRef.current) {
+      resultRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [result]);
 
   const handleFileUpload = (uploadedFile) => {
     // Revoke old object URL to prevent memory leaks
@@ -101,8 +108,16 @@ const VideoVerifier = () => {
         )}
       </div>
 
+      {loading && (
+        <div className="verifier-loading-box">
+          <div className="loading-spinner"></div>
+          <div className="loading-text">Analyzing Video...</div>
+          <div className="loading-subtext">Running multi-modal forensics — this may take 10–20 seconds</div>
+        </div>
+      )}
+
       {result && (
-        <div className="result-container">
+        <div className="result-container" ref={resultRef}>
           <ResultCard
             result={result.result}
             confidence={result.confidence}
