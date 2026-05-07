@@ -36,7 +36,13 @@ app = FastAPI(
 
 # CORS middleware - must be added before routers
 # Combine default origins with environment variable origins
-default_origins = ["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:5173", "https://ai-content-verifier.netlify.app"]
+default_origins = [
+    "http://localhost:3000", 
+    "http://127.0.0.1:3000", 
+    "http://localhost:5173", 
+    "https://ai-content-verifier.netlify.app",
+    "https://credence-ai.netlify.app"
+]
 cors_origins = default_origins + (settings.CORS_ORIGINS if isinstance(settings.CORS_ORIGINS, list) else [])
 app.add_middleware(
     CORSMiddleware,
