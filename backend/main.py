@@ -21,7 +21,11 @@ async def lifespan(app: FastAPI):
     """Startup and shutdown events"""
     # Startup
     await connect_to_mongo()
-    init_rotators(settings.GEMINI_API_KEY or "", settings.GROQ_API_KEY or "")
+    init_rotators(
+        settings.GEMINI_API_KEY or "", 
+        settings.GROQ_API_KEY or "",
+        settings.XAI_API_KEY or ""
+    )
     yield
     # Shutdown
     await close_mongo_connection()

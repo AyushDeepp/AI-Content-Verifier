@@ -53,13 +53,15 @@ class KeyRotator:
 
 _gemini_rotator = None
 _groq_rotator = None
+_grok_rotator = None
 
 
-def init_rotators(gemini_csv: str, groq_csv: str):
+def init_rotators(gemini_csv: str, groq_csv: str, xai_csv: str = ""):
     """Initialize the global key rotators from config values."""
-    global _gemini_rotator, _groq_rotator
+    global _gemini_rotator, _groq_rotator, _grok_rotator
     _gemini_rotator = KeyRotator("Gemini", gemini_csv or "")
     _groq_rotator = KeyRotator("Groq", groq_csv or "")
+    _grok_rotator = KeyRotator("Grok", xai_csv or "")
 
 
 def get_gemini_rotator() -> KeyRotator:
@@ -74,3 +76,11 @@ def get_groq_rotator() -> KeyRotator:
     if _groq_rotator is None:
         _groq_rotator = KeyRotator("Groq", "")
     return _groq_rotator
+
+
+def get_grok_rotator() -> KeyRotator:
+    global _grok_rotator
+    if _grok_rotator is None:
+        _grok_rotator = KeyRotator("Grok", "")
+    return _grok_rotator
+

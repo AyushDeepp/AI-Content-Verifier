@@ -63,7 +63,15 @@ const ResultCard = ({ result, confidence, type, timestamp, content, imagePreview
 
       {type === "image" && mediaUrl ? (
         <div className="compact-media-box">
-          <img src={mediaUrl} alt="Preview" crossOrigin="anonymous" />
+          <img 
+            src={mediaUrl} 
+            alt="Preview" 
+            style={{ display: 'block' }}
+            onError={(e) => {
+              e.target.style.display = 'none';
+              // Optionally show a placeholder or do nothing
+            }} 
+          />
         </div>
       ) : type === "video" && mediaUrl ? (
         <div className="compact-media-box">

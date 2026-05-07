@@ -12,8 +12,9 @@ from huggingface_hub import InferenceClient
 import json
 import re
 
-from core.key_rotator import get_gemini_rotator, get_groq_rotator
+from core.key_rotator import get_gemini_rotator, get_groq_rotator, get_grok_rotator
 from groq import AsyncGroq
+
 
 logger = logging.getLogger(__name__)
 
@@ -277,7 +278,96 @@ def calculate_ela_score(image_bytes: bytes, quality: int = 90) -> float:
 
 # --- ENSEMBLE ORCHESTRATOR ---
 
+async def synthesize_image_verdict(
+    gemini_result: Dict[str, Any],
+    metadata_result: Dict[str, Any],
+    ela_score: float,
+    hf_score: float
+) -> Optional[Dict[str, Any]]:
+    """Uses Gemini (Primary) or Groq/Grok to synthesize image signals into a final verdict."""
+    gemini_keys = get_gemini_rotator()
+    grok_keys = get_grok_rotator()
+    groq_keys = get_groq_rotator()
+    
+    gemini_str = f"Visual Analysis: {gemini_result['verdict']} (Confidence: {gemini_result['confidence']:.2f}). Anomalies: {', '.join(gemini_result.get('anomalies', []))}" if gemini_result else "No visual vision analysis."
+    meta_str = f"Metadata: AI Markers found - {', '.join(metadata_result['markers'])}" if metadata_result['has_ai_metadata'] else "No AI metadata."
+    
+    prompt = f"""You are a Senior Image Forensic Analyst. Synthesize these signals:
+1. {gemini_str}
+2. {meta_str}
+3. Compression Analysis (ELA): {ela_score:.2f}
+4. Neural Classifier: {hf_score:.2f}
+
+Respond ONLY with this JSON:
+{{
+  "verdict": "AI-Generated" | "Human-Created",
+  "summary": "One sentence justification",
+  "confidence": 0.0-1.0
+}}"""
+
+    # Try Gemini Synthesis (Primary)
+    if gemini_keys.has_keys:
+        try:
+            for model_name in ['gemini-flash-latest', 'gemini-1.5-flash']:
+                for attempt in range(gemini_keys.count):
+                    try:
+                        genai.configure(api_key=gemini_keys.current)
+                        model = genai.GenerativeModel(model_name)
+                        response = await asyncio.to_thread(
+                            model.generate_content,
+                            prompt
+                        )
+                        # Extract JSON from potential markdown blocks
+                        text = response.text
+                        json_match = re.search(r'\{.*\}', text, re.DOTALL)
+                        if json_match:
+                            return json.loads(json_match.group(0))
+                        return None
+
+                    except Exception as e:
+                        if "429" in str(e):
+                            gemini_keys.rotate()
+                            continue
+                        raise
+        except Exception:
+            pass
+
+    # Fallback to Groq/Grok
+    use_grok = grok_keys.has_keys
+    keys = grok_keys if use_grok else groq_keys
+    
+    if keys.has_keys:
+        try:
+            for attempt in range(keys.count):
+                try:
+                    if use_grok:
+                        from openai import AsyncOpenAI
+                        client = AsyncOpenAI(api_key=keys.current, base_url="https://api.x.ai/v1")
+                        model = "grok-4.3"
+                    else:
+                        client = AsyncGroq(api_key=keys.current)
+                        model = "llama-3.3-70b-versatile"
+
+                    response = await client.chat.completions.create(
+                        messages=[{"role": "user", "content": prompt}],
+                        model=model,
+                        response_format={"type": "json_object"},
+                        max_tokens=200
+                    )
+                    return json.loads(response.choices[0].message.content)
+                except Exception as e:
+                    if "429" in str(e):
+                        keys.rotate()
+                        continue
+                    raise
+        except Exception:
+            pass
+    return None
+
+
+
 async def detect_ai_image(image_data: bytes) -> Dict[str, Any]:
+
     """
     Enhanced image detection using Multi-Engine Ensemble.
     """
@@ -388,6 +478,9 @@ async def detect_ai_image(image_data: bytes) -> Dict[str, Any]:
     
     is_ai = final_ai_score > 0.5
     confidence = final_ai_score if is_ai else (1.0 - final_ai_score)
+
+    # --- FORENSIC SYNTHESIS (Grok/Groq) ---
+    synthesis_result = await synthesize_image_verdict(gemini_result, metadata_result, ela_score, hf_score or 0.0)
     
     # Build detailed analysis
     analysis_details = []
@@ -399,7 +492,7 @@ async def detect_ai_image(image_data: bytes) -> Dict[str, Any]:
             "analysis": (
                 f"The image was scanned for pixel-level patterns invisible to the human eye. "
                 f"AI-generated images contain unique frequency artifacts left behind by neural networks "
-                f"(such as GAN fingerprints or diffusion noise patterns) that distinguish them from real photographs."
+                f"that distinguish them from real photographs."
             )
         })
         
@@ -411,9 +504,7 @@ async def detect_ai_image(image_data: bytes) -> Dict[str, Any]:
             "confidence": f"{int(gemini_result['confidence']*100)}%",
             "analysis": (
                 f"Visual inspection findings: {', '.join(anoms) if anoms else 'No obvious structural anomalies found.'} "
-                f"This analysis examines the image for tell-tale signs of AI generation — such as "
-                f"unnaturally perfect symmetry, impossible lighting/shadows, text anomalies, "
-                f"and diffusion noise patterns at high-contrast edges."
+                f"This analysis examines the image for tell-tale signs of AI generation."
             )
         })
     
@@ -424,33 +515,27 @@ async def detect_ai_image(image_data: bytes) -> Dict[str, Any]:
             "confidence": "95%",
             "analysis": (
                 f"AI software signatures found in the image file's embedded metadata: "
-                f"{', '.join(metadata_result['markers'])}. "
-                f"This confirms the image was created using an AI generation tool."
+                f"{', '.join(metadata_result['markers'])}."
             )
         })
         
-    if sight_score is not None:
+    if synthesis_result:
+        analysis_details.append({
+            "model": "Forensic Synthesis",
+            "verdict": synthesis_result["verdict"],
+            "confidence": f"{int(synthesis_result['confidence']*100)}%",
+            "analysis": (
+                f"{synthesis_result['summary']} This conclusion was reached by cross-referencing "
+                f"visual forensics, compression analysis, and neural fingerprinting."
+            )
+        })
+    elif sight_score is not None:
         analysis_details.append({
             "model": "Deep Analysis",
             "verdict": "AI-Generated" if sight_score > 0.5 else "Human-Created",
             "confidence": f"{int(max(sight_score, 1-sight_score)*100)}%",
-            "analysis": (
-                f"A specialized neural network independently analyzed the image for generative AI patterns."
-            )
+            "analysis": "A specialized neural network independently analyzed the image for generative AI patterns."
         })
-        
-    ela_label = "suspicious (AI-like uniformity)" if ela_score > 0.6 else "normal (natural compression)"
-    analysis_details.append({
-        "model": "Compression Analysis",
-        "verdict": "Suspicious" if ela_score > 0.6 else "Normal",
-        "confidence": f"{int(ela_score*100)}%",
-        "analysis": (
-            f"Compression consistency: {ela_label}. "
-            f"This technique re-saves the image and measures how uniformly it compresses. "
-            f"AI-generated images compress very uniformly (they were never 'real' photos), "
-            f"while genuine photographs show varied compression artifacts across different regions."
-        )
-    })
         
     return {
         "result": is_ai,
@@ -460,4 +545,5 @@ async def detect_ai_image(image_data: bytes) -> Dict[str, Any]:
         "method": "Multi-Engine Ensemble",
         "analysis_details": analysis_details
     }
+
 

@@ -20,9 +20,10 @@ import json
 import numpy as np
 import re
 from groq import AsyncGroq
-from core.key_rotator import get_groq_rotator
+from core.key_rotator import get_groq_rotator, get_gemini_rotator, get_grok_rotator
 
 logger = logging.getLogger(__name__)
+
 
 
 # --- ENGINE 1: LOCAL FFT AUDIO FORENSICS (Zero API dependency) ---
@@ -138,68 +139,88 @@ def scan_video_metadata(video_path: str) -> Dict[str, Any]:
         return {"has_ai_metadata": False, "signatures": [], "encoder": "", "confidence": 0.0}
 
 
-# --- ENGINE 3: GROQ VISION FORENSICS (Free, no quota issues) ---
+# --- ENGINE 3: VISION FORENSICS (Gemini + Groq Fallback) ---
 
-async def analyze_frames_with_groq(frames: list) -> str:
+async def analyze_frames_with_vision(frames: list) -> str:
+
     """
-    Sends video frames to Groq (llama-4-scout vision model) for forensic analysis.
-    100% free, no separate quota from Gemini.
+    Analyzes video frames using available Vision AI (Gemini primary).
     """
-    groq_keys = get_groq_rotator()
-    if not groq_keys.has_keys or not frames:
+    if not frames:
         return "Visual analysis unavailable."
-    
-    try:
-        import base64
-        from io import BytesIO
-        
-        # Convert up to 4 frames to base64
-        image_contents = []
-        for frame in frames[:4]:
-            buf = BytesIO()
-            frame.save(buf, format="JPEG", quality=70)
-            b64 = base64.b64encode(buf.getvalue()).decode()
+
+    # Try Gemini first (Primary)
+    gemini_keys = get_gemini_rotator()
+    if gemini_keys.has_keys:
+        try:
+            for model_name in ['gemini-flash-latest', 'gemini-1.5-flash']:
+                for attempt in range(gemini_keys.count):
+                    try:
+                        genai.configure(api_key=gemini_keys.current)
+                        model = genai.GenerativeModel(model_name)
+                        response = await asyncio.to_thread(
+                            model.generate_content,
+                            [
+                                "Analyze these sequential video frames for AI generation artifacts (morphing, texture crawl, lighting inconsistencies). "
+                                "Is this AI generated? Provide forensic justification.",
+                                *frames[:4]
+                            ]
+                        )
+                        logger.info(f"VISION ENGINE (Gemini): Success using {model_name}")
+                        return response.text
+                    except Exception as e:
+                        if "429" in str(e) or "not found" in str(e).lower():
+                            gemini_keys.rotate()
+                            continue
+                        raise
+        except Exception as e:
+            logger.warning(f"Gemini vision failed, trying Groq: {e}")
+
+    # Try Groq (Fallback)
+    groq_keys = get_groq_rotator()
+    if groq_keys.has_keys:
+        try:
+            import base64
+            from io import BytesIO
+            image_contents = []
+            for frame in frames[:4]:
+                buf = BytesIO()
+                frame.save(buf, format="JPEG", quality=70)
+                b64 = base64.b64encode(buf.getvalue()).decode()
+                image_contents.append({
+                    "type": "image_url",
+                    "image_url": {"url": f"data:image/jpeg;base64,{b64}"}
+                })
+            
             image_contents.append({
-                "type": "image_url",
-                "image_url": {"url": f"data:image/jpeg;base64,{b64}"}
+                "type": "text",
+                "text": """Perform forensic analysis of these frames for AI generation artifacts (morphing, texture crawl)."""
             })
-        
-        image_contents.append({
-            "type": "text",
-            "text": """Forensic analysis of these video frames. Look for:
-1. FACIAL MORPHING — do faces change shape/texture unnaturally between frames?
-2. BACKGROUND SHIMMERING — pixel 'crawl' or texture swimming in backgrounds?
-3. PHYSICS VIOLATIONS — hair/water/cloth movement that defies gravity or inertia?
-4. TEXTURE INCONSISTENCY — skin that melts or eyes that change shape?
-5. LIGHTING — does light direction change between frames impossibly?
+            
+            for attempt in range(groq_keys.count):
+                try:
+                    client = AsyncGroq(api_key=groq_keys.current)
+                    model_to_use = "meta-llama/llama-4-scout-17b-16e-instruct"
+                    response = await client.chat.completions.create(
+                        model=model_to_use,
+                        messages=[{"role": "user", "content": image_contents}],
+                        max_tokens=500
+                    )
+                    findings = response.choices[0].message.content
+                    logger.info(f"VISION ENGINE (Groq): Success")
+                    return findings
+                except Exception as e:
+                    if "429" in str(e):
+                        groq_keys.rotate()
+                        continue
+                    raise
+        except Exception as e:
+            logger.error(f"Groq vision fallback failed: {e}")
 
-State clearly: is this AI-generated or real footage, and what specific artifacts did you see?"""
-        })
-        
-        # Try with key rotation on quota errors
-        for attempt in range(groq_keys.count):
-            try:
-                client = AsyncGroq(api_key=groq_keys.current)
-                response = await client.chat.completions.create(
-                    model="meta-llama/llama-4-scout-17b-16e-instruct",
-                    messages=[{"role": "user", "content": image_contents}],
-                    max_tokens=400
-                )
-                findings = response.choices[0].message.content
-                logger.info(f"GROQ VISION: Analysis complete")
-                return findings
-            except Exception as e:
-                if "429" in str(e) or "rate" in str(e).lower():
-                    groq_keys.rotate()
-                    continue
-                raise
-    except Exception as e:
-        logger.warning(f"Groq vision analysis failed: {e}")
-        # Fallback to text-only analysis with SMI context
-        return "Visual frame analysis unavailable — relying on motion physics signals only."
+    return "Visual frame analysis unavailable — relying on motion physics signals only."
 
 
-# --- ENGINE 4: GROQ CROSS-MODAL SYNTHESIZER ---
+# --- ENGINE 4: FORENSIC SYNTHESIZER ---
 
 async def synthesize_verdict(
     visual_findings: str,
@@ -207,18 +228,17 @@ async def synthesize_verdict(
     audio_result: Dict[str, Any],
     metadata_result: Dict[str, Any]
 ) -> Dict[str, Any]:
-    """Uses Groq Llama-3.3 to synthesize all signals into a final verdict."""
+    """Uses Gemini (Primary) or Groq/Grok to synthesize all signals into a final verdict."""
+    gemini_keys = get_gemini_rotator()
     groq_keys = get_groq_rotator()
-    if not groq_keys.has_keys:
-        return None
+    grok_keys = get_grok_rotator()
     
-    try:
-        meta_str = f"ALERT: AI signatures found — {', '.join(metadata_result['signatures'])}" \
-                   if metadata_result['has_ai_metadata'] else "No AI signatures in metadata."
-        
-        audio_str = f"Audio: {audio_result['label']} (score: {audio_result['score']:.2f})"
-        
-        prompt = f"""You are a Lead Digital Forensic Analyst. Assess if this video is AI-generated.
+    meta_str = f"ALERT: AI signatures found — {', '.join(metadata_result['signatures'])}" \
+               if metadata_result['has_ai_metadata'] else "No AI signatures in metadata."
+    
+    audio_str = f"Audio: {audio_result['label']} (score: {audio_result['score']:.2f})"
+    
+    prompt = f"""You are a Lead Digital Forensic Analyst. Assess if this video is AI-generated.
 
 FORENSIC EVIDENCE:
 1. Visual Frame Analysis: {visual_findings[:500]}
@@ -226,40 +246,78 @@ FORENSIC EVIDENCE:
 3. {audio_str}
 4. Metadata: {meta_str}
 
-DECISION RULES:
-- If metadata has AI signatures → ALWAYS classify as AI-Generated with 95%+ confidence
-- If SMI > 0.65 AND visual findings suggest artifacts → AI-Generated with 80%+ confidence
-- If all signals are ambiguous → default to Human-Created with 55% confidence
-- If audio shows vocoder pattern AND SMI > 0.5 → AI-Generated with 75%+ confidence
-
-Respond ONLY with this JSON (no extra text):
+Respond ONLY with this JSON:
 {{
-  "verdict": "AI-Generated",
-  "confidence": 0.87,
-  "summary": "Brief one-sentence forensic justification"
+  "verdict": "AI-Generated" | "Human-Created",
+  "confidence": 0.0-1.0,
+  "summary": "One sentence forensic justification"
 }}"""
 
-        # Try with key rotation on quota errors
-        for attempt in range(groq_keys.count):
-            try:
-                client = AsyncGroq(api_key=groq_keys.current)
-                response = await client.chat.completions.create(
-                    messages=[{"role": "user", "content": prompt}],
-                    model="llama-3.3-70b-versatile",
-                    response_format={"type": "json_object"},
-                    max_tokens=200
-                )
-                result = json.loads(response.choices[0].message.content)
-                logger.info(f"GROQ SYNTHESIS: {result}")
-                return result
-            except Exception as e:
-                if "429" in str(e) or "rate" in str(e).lower():
-                    groq_keys.rotate()
-                    continue
-                raise
-    except Exception as e:
-        logger.error(f"Groq synthesis failed: {e}")
-        return None
+    # Try Gemini Synthesis first (Primary)
+    if gemini_keys.has_keys:
+        try:
+            for model_name in ['gemini-flash-latest', 'gemini-1.5-flash']:
+                for attempt in range(gemini_keys.count):
+                    try:
+                        genai.configure(api_key=gemini_keys.current)
+                        model = genai.GenerativeModel(model_name)
+                        response = await asyncio.to_thread(
+                            model.generate_content,
+                            prompt
+                        )
+                        # Robust JSON parsing for older SDKs
+                        text = response.text
+                        json_match = re.search(r'\{.*\}', text, re.DOTALL)
+                        if json_match:
+                            result = json.loads(json_match.group(0))
+                            logger.info(f"SYNTHESIS ENGINE (Gemini): {result['verdict']}")
+                            return result
+                        return None
+
+                    except Exception as e:
+                        if "429" in str(e):
+                            gemini_keys.rotate()
+                            continue
+                        raise
+        except Exception as e:
+            logger.warning(f"Gemini synthesis failed, trying Groq: {e}")
+
+    # Fallback to Groq/Grok
+    use_grok = grok_keys.has_keys
+    keys = grok_keys if use_grok else groq_keys
+    
+    if keys.has_keys:
+        try:
+            for attempt in range(keys.count):
+                try:
+                    if use_grok:
+                        from openai import AsyncOpenAI
+                        client = AsyncOpenAI(api_key=keys.current, base_url="https://api.x.ai/v1")
+                        model = "grok-4.3"
+                    else:
+                        client = AsyncGroq(api_key=keys.current)
+                        model = "llama-3.3-70b-versatile"
+
+                    response = await client.chat.completions.create(
+                        messages=[{"role": "user", "content": prompt}],
+                        model=model,
+                        response_format={"type": "json_object"},
+                        max_tokens=250
+                    )
+                    result = json.loads(response.choices[0].message.content)
+                    logger.info(f"SYNTHESIS ENGINE ({'Grok' if use_grok else 'Groq'}): {result['verdict']}")
+                    return result
+                except Exception as e:
+                    if "429" in str(e):
+                        keys.rotate()
+                        continue
+                    raise
+        except Exception:
+            pass
+
+    return None
+
+
 
 
 # --- MAIN DETECTOR ---
@@ -324,24 +382,25 @@ async def detect_ai_video(video_data: bytes) -> Dict[str, Any]:
         cap = None
 
         # Calibrate SMI from Coefficient of Variation
-        # AvgCV < 2.0 = natural, 2.0-3.5 = borderline, > 3.5 = AI-like
+        # AvgCV < 1.8 = natural, 1.8-3.0 = borderline, > 3.0 = AI-like
+        # We lowered thresholds to catch smoother modern AI (Sora/Kling)
         smi_score = 0.2
         if flow_scores:
             avg_cv = sum(flow_scores) / len(flow_scores)
-            # Piecewise linear calibration based on empirical ranges
-            if avg_cv < 1.5:
-                smi_score = 0.1  # Clearly natural
-            elif avg_cv < 2.5:
-                smi_score = 0.2 + (avg_cv - 1.5) * 0.15  # 0.2 to 0.35
-            elif avg_cv < 4.0:
-                smi_score = 0.35 + (avg_cv - 2.5) * 0.30  # 0.35 to 0.80
+            if avg_cv < 1.3:
+                smi_score = 0.1
+            elif avg_cv < 2.0:
+                smi_score = 0.2 + (avg_cv - 1.3) * 0.25  # 1.8 -> ~0.32
+            elif avg_cv < 3.5:
+                smi_score = 0.4 + (avg_cv - 2.0) * 0.30  # 3.0 -> ~0.70
             else:
-                smi_score = min(0.95, 0.80 + (avg_cv - 4.0) * 0.05)  # 0.80+
+                smi_score = min(0.95, 0.85 + (avg_cv - 3.5) * 0.05)
             logger.info(f"VIDEO OPTICAL FLOW: AvgCV={avg_cv:.3f}, SMI={smi_score:.3f}")
 
         # Run all engines in parallel
         audio_task = analyze_audio_forensics(temp_video_path)
-        vision_task = analyze_frames_with_groq(frame_images)  # Groq vision (free)
+        vision_task = analyze_frames_with_vision(frame_images)  # New multi-engine vision
+
         
         metadata_result = scan_video_metadata(temp_video_path)
         

@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     HUGGINGFACE_API_KEY: Optional[str] = None  # Optional, not used anymore
     GEMINI_API_KEY: Optional[str] = None  # Optional for enhanced detection
     GROQ_API_KEY: Optional[str] = None  # For fast text detection
+    XAI_API_KEY: Optional[str] = None  # For xAI Grok (Synthesis)
     SIGHTENGINE_API_USER: Optional[str] = None
     SIGHTENGINE_API_SECRET: Optional[str] = None
     R2_ACCOUNT_ID: Optional[str] = None

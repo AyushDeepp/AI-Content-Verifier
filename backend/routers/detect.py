@@ -98,12 +98,13 @@ async def detect_image(
     # Read file content
     image_data = await file.read()
     
-    # Validate file size (max 10MB)
-    if len(image_data) > 10 * 1024 * 1024:
+    # Validate file size (max 50MB)
+    if len(image_data) > 50 * 1024 * 1024:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Image file too large (max 10MB)"
+            detail="Image file too large (max 50MB)"
         )
+
     
     # Perform detection
     detection_result = await detect_ai_image(image_data)
